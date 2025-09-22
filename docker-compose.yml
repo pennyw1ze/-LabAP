@@ -1,0 +1,193 @@
+version: '3.8'
+
+services:
+  # Message Queue Service
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: byteristo-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - byteristo-network
+
+  # Database Services
+  postgres-menu:
+    image: postgres:13
+    container_name: byteristo-db-menu
+    environment:
+      POSTGRES_DB: menu_inventory_db
+      POSTGRES_USER: menu_user
+      POSTGRES_PASSWORD: menu_password
+    volumes:
+      - postgres_menu_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - byteristo-network
+
+  postgres-orders:
+    image: postgres:13
+    container_name: byteristo-db-orders
+    environment:
+      POSTGRES_DB: orders_db
+      POSTGRES_USER: orders_user
+      POSTGRES_PASSWORD: orders_password
+    volumes:
+      - postgres_orders_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - byteristo-network
+
+  postgres-billing:
+    image: postgres:13
+    container_name: byteristo-db-billing
+    environment:
+      POSTGRES_DB: billing_db
+      POSTGRES_USER: billing_user
+      POSTGRES_PASSWORD: billing_password
+    volumes:
+      - postgres_billing_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - byteristo-network
+
+  # Redis for Analytics and Caching
+  redis:
+    image: redis:6-alpine
+    container_name: byteristo-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - byteristo-network
+
+  # Menu & Inventory Service
+  menu-inventory-service:
+    build: ./services/menu-inventory
+    container_name: byteristo-menu-inventory
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_HOST=postgres-menu
+      - DB_PORT=5432
+      - DB_NAME=menu_inventory_db
+      - DB_USER=menu_user
+      - DB_PASSWORD=menu_password
+      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
+    depends_on:
+      - postgres-menu
+      - rabbitmq
+    networks:
+      - byteristo-network
+
+  # Order Management Service
+  order-management-service:
+    build: ./services/order-management
+    container_name: byteristo-order-management
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - DB_HOST=postgres-orders
+      - DB_PORT=5432
+      - DB_NAME=orders_db
+      - DB_USER=orders_user
+      - DB_PASSWORD=orders_password
+      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
+      - MENU_SERVICE_URL=http://menu-inventory-service:3001
+    depends_on:
+      - postgres-orders
+      - rabbitmq
+      - menu-inventory-service
+    networks:
+      - byteristo-network
+
+  # Billing & Payments Service
+  billing-payments-service:
+    build: ./services/billing-payments
+    container_name: byteristo-billing-payments
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - DB_HOST=postgres-billing
+      - DB_PORT=5432
+      - DB_NAME=billing_db
+      - DB_USER=billing_user
+      - DB_PASSWORD=billing_password
+      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
+      - ORDER_SERVICE_URL=http://order-management-service:3002
+    depends_on:
+      - postgres-billing
+      - rabbitmq
+      - order-management-service
+    networks:
+      - byteristo-network
+
+  # Analytics & Reporting Service
+  analytics-reporting-service:
+    build: ./services/analytics-reporting
+    container_name: byteristo-analytics-reporting
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - PORT=3004
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
+      - MENU_SERVICE_URL=http://menu-inventory-service:3001
+      - ORDER_SERVICE_URL=http://order-management-service:3002
+      - BILLING_SERVICE_URL=http://billing-payments-service:3003
+    depends_on:
+      - redis
+      - rabbitmq
+      - menu-inventory-service
+      - order-management-service
+      - billing-payments-service
+    networks:
+      - byteristo-network
+
+  # API Gateway
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: byteristo-api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MENU_SERVICE_URL=http://menu-inventory-service:3001
+      - ORDER_SERVICE_URL=http://order-management-service:3002
+      - BILLING_SERVICE_URL=http://billing-payments-service:3003
+      - ANALYTICS_SERVICE_URL=http://analytics-reporting-service:3004
+    depends_on:
+      - menu-inventory-service
+      - order-management-service
+      - billing-payments-service
+      - analytics-reporting-service
+    networks:
+      - byteristo-network
+
+volumes:
+  rabbitmq_data:
+  postgres_menu_data:
+  postgres_orders_data:
+  postgres_billing_data:
+  redis_data:
+
+networks:
+  byteristo-network:
+    driver: bridge
