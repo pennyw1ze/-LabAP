@@ -23,7 +23,7 @@ check_docker() {
 # Function to start all services
 start_services() {
     echo -e "${YELLOW}🚀 Starting all ByteRisto services...${NC}"
-    docker-compose up -d
+    docker compose up -d
     
     echo -e "${YELLOW}⏳ Waiting for services to be ready...${NC}"
     sleep 30
@@ -42,7 +42,7 @@ start_services() {
 # Function to stop all services
 stop_services() {
     echo -e "${YELLOW}🛑 Stopping all ByteRisto services...${NC}"
-    docker-compose down
+    docker compose down
     echo -e "${GREEN}✅ Services stopped!${NC}"
 }
 
@@ -74,17 +74,17 @@ check_health() {
 view_logs() {
     if [ -n "$1" ]; then
         echo -e "${YELLOW}📋 Viewing logs for $1...${NC}"
-        docker-compose logs -f "$1"
+        docker compose logs -f "$1"
     else
         echo -e "${YELLOW}📋 Viewing logs for all services...${NC}"
-        docker-compose logs -f
+        docker compose logs -f
     fi
 }
 
 # Function to restart services
 restart_services() {
     echo -e "${YELLOW}🔄 Restarting all ByteRisto services...${NC}"
-    docker-compose restart
+    docker compose restart
     echo -e "${GREEN}✅ Services restarted!${NC}"
 }
 
