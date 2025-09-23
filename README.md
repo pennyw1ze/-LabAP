@@ -29,8 +29,8 @@ ByteRisto follows a microservices architecture with the following key components
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/pennyw1ze/-LabAP.git
-   cd -LabAP
+   https://github.com/pennyw1ze/ByteRisto
+   cd ByteRisto
    ```
 
 2. **Setup environment (creates .env file)**
