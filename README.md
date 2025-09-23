@@ -112,35 +112,10 @@ ByteRisto follows a microservices architecture with the following key components
 
 ### Local Development Setup
 
-1. **Install dependencies for each service**
-   ```bash
-   ./install_dependencies.sh
-   ```
 
-2. **Or manually setup Python virtual environments**
+1. **Start infrastructure services**
    ```bash
-   cd services/menu-inventory && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
-   cd ../order-management && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
-   cd ../billing-payments && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
-   cd ../analytics-reporting && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
-   cd ../api-gateway && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
-   ```
-
-3. **Start infrastructure services**
-   ```bash
-   docker-compose up -d rabbitmq postgres-menu postgres-orders postgres-billing redis
-   ```
-
-4. **Run services in development mode**
-   ```bash
-   # Terminal 1 - Menu & Inventory
-   cd services/menu-inventory && source venv/bin/activate && python src/app.py
-   
-   # Terminal 2 - Order Management
-   cd services/order-management && source venv/bin/activate && python src/app.py
-   
-   # Terminal 3 - API Gateway
-   cd services/api-gateway && source venv/bin/activate && python src/app.py
+   docker compose u
    ```
 
 ### API Examples
@@ -296,13 +271,6 @@ Run comprehensive API tests:
 
 # Or test individual APIs
 ./test_apis.sh
-```
-
-Run tests for each service locally:
-
-```bash
-cd services/menu-inventory && source venv/bin/activate && python -m pytest
-cd services/order-management && source venv/bin/activate && python -m pytest
 ```
 
 ## 📈 Monitoring & Health Checks
