@@ -1,6 +1,6 @@
 # ByteRisto - Restaurant Management System
 
-ByteRisto is an internal Restaurant Management System offering an all-in-one solution for menu, inventory, ordering, billing, and analytics. It uses microservices architecture, Docker, REST & Message Queue APIs, with each service independently deployed. It supports staff from waiters to managers with role-based access control.
+ByteRisto is an internal Restaurant Management System offering an all-in-one solution for menu, inventory, ordering, billing, and analytics. Built with **Python Flask microservices**, Docker containerization, REST APIs, and message queues, with each service independently deployed. It supports staff from waiters to managers with role-based access control.
 
 ## 🏗️ Architecture
 
@@ -22,7 +22,7 @@ ByteRisto follows a microservices architecture with the following key components
 
 ### Prerequisites
 - Docker and Docker Compose
-- Node.js 18+ (for local development)
+- Python 3.11+ (for local development)
 - Git
 
 ### Running with Docker Compose
@@ -33,15 +33,29 @@ ByteRisto follows a microservices architecture with the following key components
    cd -LabAP
    ```
 
-2. **Start all services**
+2. **Setup environment (creates .env file)**
    ```bash
-   docker-compose up -d
+   ./install_dependencies.sh
    ```
 
-3. **Check service health**
+3. **Deploy services**
    ```bash
-   curl http://localhost:3000/health
-   curl http://localhost:3000/status
+   ./deploy.sh
+   ```
+
+4. **Or run full deployment with testing**
+   ```bash
+   ./docker_test.sh
+   ```
+
+5. **Or manually start services**
+   ```bash
+   docker-compose up --build -d
+   ```
+
+6. **Test APIs**
+   ```bash
+   ./test_apis.sh
    ```
 
 ### Service URLs
@@ -100,28 +114,33 @@ ByteRisto follows a microservices architecture with the following key components
 
 1. **Install dependencies for each service**
    ```bash
-   cd services/menu-inventory && npm install
-   cd ../order-management && npm install
-   cd ../billing-payments && npm install
-   cd ../analytics-reporting && npm install
-   cd ../api-gateway && npm install
+   ./install_dependencies.sh
    ```
 
-2. **Start infrastructure services**
+2. **Or manually setup Python virtual environments**
+   ```bash
+   cd services/menu-inventory && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
+   cd ../order-management && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
+   cd ../billing-payments && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
+   cd ../analytics-reporting && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
+   cd ../api-gateway && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
+   ```
+
+3. **Start infrastructure services**
    ```bash
    docker-compose up -d rabbitmq postgres-menu postgres-orders postgres-billing redis
    ```
 
-3. **Run services in development mode**
+4. **Run services in development mode**
    ```bash
    # Terminal 1 - Menu & Inventory
-   cd services/menu-inventory && npm run dev
+   cd services/menu-inventory && source venv/bin/activate && python src/app.py
    
    # Terminal 2 - Order Management
-   cd services/order-management && npm run dev
+   cd services/order-management && source venv/bin/activate && python src/app.py
    
    # Terminal 3 - API Gateway
-   cd services/api-gateway && npm run dev
+   cd services/api-gateway && source venv/bin/activate && python src/app.py
    ```
 
 ### API Examples
@@ -222,17 +241,29 @@ The system uses RabbitMQ for asynchronous communication between services:
 
 ## 🐳 Docker Configuration
 
-Each service is containerized with optimized Docker images:
+Each service is containerized with optimized Python Docker images:
 
 ```dockerfile
-FROM node:18-alpine
+FROM python:3.11-slim
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY src/ ./src/
+
+# Set Python path
+ENV PYTHONPATH=/app/src
+
 EXPOSE [PORT]
-USER node
-CMD ["npm", "start"]
+CMD ["python", "src/app.py"]
 ```
 
 ## 🔧 Configuration
@@ -257,11 +288,21 @@ ORDER_SERVICE_URL=http://localhost:3002
 
 ## 🧪 Testing
 
-Run tests for each service:
+Run comprehensive API tests:
 
 ```bash
-cd services/menu-inventory && npm test
-cd services/order-management && npm test
+# Test all services with Docker
+./docker_test.sh
+
+# Or test individual APIs
+./test_apis.sh
+```
+
+Run tests for each service locally:
+
+```bash
+cd services/menu-inventory && source venv/bin/activate && python -m pytest
+cd services/order-management && source venv/bin/activate && python -m pytest
 ```
 
 ## 📈 Monitoring & Health Checks
@@ -276,11 +317,11 @@ The API Gateway provides a consolidated status endpoint:
 
 ## 🔒 Security Features
 
-- Helmet.js for security headers
-- CORS configuration
-- Input validation with Joi
+- Flask-CORS for cross-origin resource sharing
+- Input validation with Marshmallow
 - Environment-based configuration
-- Non-root Docker containers
+- Secure Docker containers
+- Database connection pooling
 
 ## 📚 API Documentation
 

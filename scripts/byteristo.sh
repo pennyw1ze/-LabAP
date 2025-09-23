@@ -97,8 +97,13 @@ setup_dev() {
     
     for service in "${services[@]}"; do
         if [ -d "services/$service" ]; then
-            echo -e "${BLUE}📦 Installing dependencies for $service...${NC}"
-            cd "services/$service" && npm install && cd ../..
+            echo -e "${BLUE}📦 Setting up Python environment for $service...${NC}"
+            cd "services/$service"
+            if [ ! -d "venv" ]; then
+                python3 -m venv venv
+            fi
+            source venv/bin/activate && pip install -r requirements.txt && deactivate
+            cd ../..
         fi
     done
     

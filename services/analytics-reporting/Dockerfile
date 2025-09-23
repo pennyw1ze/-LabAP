@@ -1,14 +1,22 @@
-FROM node:18-alpine
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --only=production
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY src/ ./src/
+
+# Set Python path
+ENV PYTHONPATH=/app/src
 
 EXPOSE 3004
 
-USER node
-
-CMD ["npm", "start"]
+CMD ["python", "src/app.py"]
