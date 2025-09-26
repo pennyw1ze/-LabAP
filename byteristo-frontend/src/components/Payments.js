@@ -35,7 +35,7 @@ export default function Payments() {
       <button onClick={() => handlePayment({ orderId: "example-id", amount: 20 })}>
         Make Payment
       </button>
-      <ul>
+      <ul className="order-list">
         {payments.map(p => (
           <li key={p.id}>
             Order {p.orderId} - ${p.amount} - {p.status}
