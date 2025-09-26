@@ -6,6 +6,20 @@ export async function getMenu() {
   return res.json();
 }
 
+// api.js
+export async function fetchMenuItems() {
+  try {
+    const response = await fetch(`${API_BASE}/menu-items`);
+    if (!response.ok) {
+      throw new Error('Errore nel recupero degli articoli del menu');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Errore:', error);
+    return [];
+  }
+}
+
 export async function getInventory() {
   const res = await fetch(`${API_BASE}/inventory`);
   return res.json();

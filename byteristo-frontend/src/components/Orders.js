@@ -1,55 +1,43 @@
-import React, { useEffect, useState } from "react";
-import { getOrders, createOrder } from "../api";
+import React, { useEffect, useState } from 'react';
+import { fetchMenuItems } from '../api';  // Assicurati che il percorso sia corretto
 
-export default function Orders() {
-  const [orders, setOrders] = useState([]);
+export default function Order() {
+  const [menuItems, setMenuItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState('');
 
   useEffect(() => {
-    getOrders()
-      .then(data => {
-        // Controllo della struttura dei dati
-        if (Array.isArray(data)) {
-          setOrders(data);
-        } else if (data.orders && Array.isArray(data.orders)) {
-          setOrders(data.orders);
-        } else {
-          console.error("Orders API returned unexpected data:", data);
-          setOrders([]);
-        }
-      })
-      .catch(err => console.error(err));
-  }, []);
-
-  const handleCreateOrder = async () => {
-    const newOrder = {
-      tableNumber: 1,
-      waiterId: "waiter-001",
-      waiterName: "John Doe",
-      customerName: "Alice Smith",
-      items: [
-        { menuItemId: "example-id", quantity: 1, specialInstructions: "" }
-      ]
+    const loadMenuItems = async () => {
+      const items = await fetchMenuItems();
+      setMenuItems(items);  // Imposta gli articoli del menu
     };
 
-    try {
-      const createdOrder = await createOrder(newOrder);
-      setOrders(prev => [...prev, createdOrder]);
-    } catch (err) {
-      console.error(err);
-    }
+    loadMenuItems();  // Carica gli articoli al caricamento del componente
+  }, []);
+
+  const handleSubmit = () => {
+    // Logica per inviare l'ordine
+    console.log('Ordine inviato:', selectedItem);
   };
 
   return (
     <div>
-      <h2>Orders</h2>
-      <button onClick={handleCreateOrder}>Create Order</button>
-      <ul>
-        {orders.map(order => (
-          <li key={order.id}>
-            Table {order.tableNumber} - Customer: {order.customerName} - Status: {order.status}
-          </li>
-        ))}
-      </ul>
+      <h2>Nuovo Ordine</h2>
+      <select
+        value={selectedItem}
+        onChange={(e) => setSelectedItem(e.target.value)} // Gestisci la selezione
+      >
+        <option value="">Seleziona un articolo</option>
+        {menuItems.length > 0 ? (
+          menuItems.map(item => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))
+        ) : (
+          <option>Loading menu...</option> // Messaggio di caricamento
+        )}
+      </select>
+      <button onClick={handleSubmit}>Invia Ordine</button>
     </div>
   );
 }
