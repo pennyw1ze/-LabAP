@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Menu from './Menu'; // Importa il componente Menu
+import MenuOrder from './Menu'; // Importa il componente Menu
 
 export default function Order() {
   const [order, setOrder] = useState([]);
@@ -18,10 +18,10 @@ export default function Order() {
 
   return (
     <div>
-      <h2>Componi il tuo Ordine</h2>
-      <Menu addToOrder={addToOrder} />
+      <h2>Nuovo Ordine</h2>
+      <MenuOrder addToOrder={addToOrder} />
       <h3>Carrello</h3>
-      <ul>
+      <ul className="order-list">
         {order.map((item, index) => (
           <li key={index}>
             {item.name} - €{item.price}

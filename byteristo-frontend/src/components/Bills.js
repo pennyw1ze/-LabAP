@@ -23,7 +23,7 @@ export default function Bills() {
   return (
     <div>
       <h2>Bills</h2>
-      <ul>
+      <ul className="order-list">
         {bills.map(b => (
           <li key={b.id}>
             Bill {b.id} - Order {b.orderId} - ${b.total}

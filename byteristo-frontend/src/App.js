@@ -1,5 +1,5 @@
 import React from "react";
-import Menu from "./components/Menu";
+import MenuDisplay from "./components/MenuDisplay";
 import Orders from "./components/Orders";
 import Payments from "./components/Payments";
 import Bills from "./components/Bills";
@@ -13,7 +13,7 @@ function App() {
         <h1>ByteRisto Dashboard</h1>
       </header>
       <main>
-        <Menu />
+        <MenuDisplay />
         <Orders />
         <Payments />
         <Bills />
