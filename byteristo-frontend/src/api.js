@@ -15,7 +15,7 @@ export async function fetchMenuItems() {
     }
     return await response.json();
   } catch (error) {
-    console.error('Errore:', error);
+    console.error('Error:', error);
     return [];
   }
 }
