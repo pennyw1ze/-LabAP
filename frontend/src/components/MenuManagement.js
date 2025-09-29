@@ -1,27 +1,29 @@
 // byteristo-frontend/src/components/MenuManagement.js
 import React, { useState, useEffect } from 'react';
-import { getMenu, getInventory, createMenuItem } from '../api';
+import { getMenu, createMenuItem, updateMenuItem, deleteMenuItem } from '../api';
+
+const getInitialFormState = () => ({
+  name: '',
+  description: '',
+  price: 0,
+  category: 'main',
+  is_available: true,
+  preparation_time: 15,
+  allergens: '',
+  nutritional_info: {
+    calories: '',
+    protein: '',
+    carbs: '',
+    fat: ''
+  }
+});
 
 export default function MenuManagement() {
   const [menuItems, setMenuItems] = useState([]);
-  const [inventory, setInventory] = useState([]);
+  const [editingItem, setEditingItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: 0,
-    category: 'main',
-    is_available: true,
-    preparation_time: 15,
-    allergens: '',
-    nutritional_info: {
-      calories: '',
-      protein: '',
-      carbs: '',
-      fat: ''
-    }
-  });
+  const [formData, setFormData] = useState(getInitialFormState());
 
   useEffect(() => {
     loadData();
@@ -30,17 +32,19 @@ export default function MenuManagement() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [menuData, inventoryData] = await Promise.all([
-        getMenu(),
-        getInventory()
-      ]);
+      const menuData = await getMenu();
       setMenuItems(menuData);
-      setInventory(inventoryData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData(getInitialFormState());
+    setEditingItem(null);
+    setShowAddForm(false);
   };
 
   const handleSubmit = async (e) => {
@@ -49,39 +53,79 @@ export default function MenuManagement() {
       const menuItemData = {
         ...formData,
         price: parseFloat(formData.price),
-        preparation_time: parseInt(formData.preparation_time),
+        preparation_time: parseInt(formData.preparation_time, 10),
         allergens: formData.allergens ? formData.allergens.split(',').map(a => a.trim()) : null,
         nutritional_info: {
-          calories: formData.nutritional_info.calories ? parseInt(formData.nutritional_info.calories) : null,
+          calories: formData.nutritional_info.calories ? parseInt(formData.nutritional_info.calories, 10) : null,
           protein: formData.nutritional_info.protein ? parseFloat(formData.nutritional_info.protein) : null,
           carbs: formData.nutritional_info.carbs ? parseFloat(formData.nutritional_info.carbs) : null,
           fat: formData.nutritional_info.fat ? parseFloat(formData.nutritional_info.fat) : null,
         }
       };
 
-      await createMenuItem(menuItemData);
-      
-      // Reset form
-      setFormData({
-        name: '',
-        description: '',
-        price: 0,
-        category: 'main',
-        is_available: true,
-        preparation_time: 15,
-        allergens: '',
-        nutritional_info: {
-          calories: '',
-          protein: '',
-          carbs: '',
-          fat: ''
-        }
-      });
-      setShowAddForm(false);
-      loadData(); // Reload data
+      if (editingItem) {
+        await updateMenuItem(editingItem.id, menuItemData);
+      } else {
+        await createMenuItem(menuItemData);
+      }
+
+      resetForm();
+      await loadData();
     } catch (error) {
-      console.error('Error creating menu item:', error);
-      alert('Errore nella creazione del piatto');
+      console.error('Error saving menu item:', error);
+      alert('Errore nel salvataggio del piatto');
+    }
+  };
+
+  const handleEdit = (menuItem) => {
+    setEditingItem(menuItem);
+    setFormData({
+      name: menuItem.name || '',
+      description: menuItem.description || '',
+      price: menuItem.price ?? 0,
+      category: menuItem.category || 'main',
+      is_available: Boolean(menuItem.is_available),
+      preparation_time: menuItem.preparation_time ?? 15,
+      allergens: menuItem.allergens && menuItem.allergens.length > 0 ? menuItem.allergens.join(', ') : '',
+      nutritional_info: {
+        calories: menuItem.nutritional_info?.calories ?? '',
+        protein: menuItem.nutritional_info?.protein ?? '',
+        carbs: menuItem.nutritional_info?.carbs ?? '',
+        fat: menuItem.nutritional_info?.fat ?? ''
+      }
+    });
+    setShowAddForm(true);
+  };
+
+  const handleDelete = async (menuItem) => {
+    const confirmed = window.confirm(`Eliminare definitivamente "${menuItem.name}" dal menu?`);
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteMenuItem(menuItem.id);
+      if (editingItem?.id === menuItem.id) {
+        resetForm();
+      }
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting menu item:', error);
+      alert('Errore durante l\'eliminazione del piatto');
+    }
+  };
+
+  const handleToggleAvailability = async (menuItem) => {
+    const desiredAvailability = !menuItem.is_available;
+    try {
+      const updatedItem = await updateMenuItem(menuItem.id, { is_available: desiredAvailability });
+      setMenuItems(prev => prev.map(item => item.id === menuItem.id ? { ...item, ...(updatedItem || {}), is_available: desiredAvailability } : item));
+      if (editingItem?.id === menuItem.id) {
+        setFormData(prev => ({ ...prev, is_available: desiredAvailability }));
+      }
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      alert('Errore nell\'aggiornamento della disponibilità');
     }
   };
 
@@ -114,7 +158,15 @@ export default function MenuManagement() {
 
       <div style={{ marginBottom: '20px' }}>
         <button 
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            if (showAddForm) {
+              resetForm();
+            } else {
+              setEditingItem(null);
+              setFormData(getInitialFormState());
+              setShowAddForm(true);
+            }
+          }}
           style={{
             backgroundColor: '#00b894',
             color: 'white',
@@ -124,7 +176,7 @@ export default function MenuManagement() {
             cursor: 'pointer'
           }}
         >
-          {showAddForm ? 'Annulla' : 'Aggiungi Piatto'}
+          {showAddForm ? (editingItem ? 'Annulla Modifica' : 'Annulla') : 'Aggiungi Piatto'}
         </button>
       </div>
 
@@ -136,7 +188,7 @@ export default function MenuManagement() {
           borderRadius: '4px', 
           marginBottom: '20px' 
         }}>
-          <h3>Nuovo Piatto</h3>
+          <h3>{editingItem ? `Modifica: ${editingItem.name}` : 'Nuovo Piatto'}</h3>
           
           {/* Basic Info */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '15px' }}>
@@ -257,10 +309,8 @@ export default function MenuManagement() {
             marginBottom: '15px',
             fontSize: '0.9em'
           }}>
-            <strong>📝 Nota:</strong> La selezione degli ingredienti dall'inventory richiede 
-            l'implementazione della tabella di associazione many-to-many nel backend. 
-            Per ora puoi creare il piatto e successivamente collegare gli ingredienti 
-            direttamente nel database o tramite API dedicate.
+            <strong>📝 Nota:</strong> Imposta la disponibilità del piatto con l'interruttore qui sopra.
+            La gestione dettagliata degli ingredienti può essere effettuata separatamente tramite API dedicate.
           </div>
 
           <div>
@@ -273,9 +323,9 @@ export default function MenuManagement() {
               cursor: 'pointer',
               marginRight: '10px'
             }}>
-              Salva Piatto
+              {editingItem ? 'Salva Modifiche' : 'Salva Piatto'}
             </button>
-            <button type="button" onClick={() => setShowAddForm(false)} style={{
+            <button type="button" onClick={resetForm} style={{
               backgroundColor: '#636e72',
               color: 'white',
               border: 'none',
@@ -305,6 +355,7 @@ export default function MenuManagement() {
                   <th style={{ padding: '8px', textAlign: 'left' }}>Tempo Prep.</th>
                   <th style={{ padding: '8px', textAlign: 'left' }}>Disponibilità</th>
                   <th style={{ padding: '8px', textAlign: 'left' }}>Allergeni</th>
+                  <th style={{ padding: '8px', textAlign: 'left' }}>Azioni</th>
                 </tr>
               </thead>
               <tbody>
@@ -328,12 +379,20 @@ export default function MenuManagement() {
                       {item.preparation_time} min
                     </td>
                     <td style={{ padding: '8px' }}>
-                      <span style={{ 
-                        color: item.is_available ? '#00b894' : '#d63031',
-                        fontWeight: 'bold'
-                      }}>
-                        {item.is_available ? '✅ Sì' : '❌ No'}
-                      </span>
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={item.is_available}
+                          onChange={() => handleToggleAvailability(item)}
+                          style={{ width: '18px', height: '18px' }}
+                        />
+                        <span style={{
+                          color: item.is_available ? '#00b894' : '#d63031',
+                          fontWeight: 'bold'
+                        }}>
+                          {item.is_available ? 'Disponibile' : 'Non disponibile'}
+                        </span>
+                      </label>
                     </td>
                     <td style={{ padding: '8px' }}>
                       {item.allergens && item.allergens.length > 0 ? (
@@ -344,48 +403,43 @@ export default function MenuManagement() {
                         <span style={{ color: '#666' }}>Nessuno</span>
                       )}
                     </td>
+                    <td style={{ padding: '8px' }}>
+                      <button
+                        onClick={() => handleEdit(item)}
+                        style={{
+                          backgroundColor: '#0984e3',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.8em',
+                          marginRight: '8px'
+                        }}
+                      >
+                        Modifica
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        style={{
+                          backgroundColor: '#d63031',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.8em'
+                        }}
+                      >
+                        Elimina
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-      </div>
-
-      {/* Available Ingredients from Inventory */}
-      <div style={{ marginTop: '30px' }}>
-        <h3>Ingredienti Disponibili nell'Inventory ({inventory.length})</h3>
-        <div style={{ 
-          backgroundColor: '#f8f9fa', 
-          padding: '15px', 
-          borderRadius: '4px',
-          maxHeight: '200px',
-          overflowY: 'auto'
-        }}>
-          {inventory.length === 0 ? (
-            <p style={{ margin: 0, color: '#666' }}>
-              Nessun ingrediente nell'inventory. Vai alla sezione Inventory per aggiungerne.
-            </p>
-          ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {inventory.map(item => (
-                <span 
-                  key={item.id}
-                  style={{ 
-                    backgroundColor: item.current_stock > 0 ? '#d1edff' : '#ffe6e6',
-                    color: item.current_stock > 0 ? '#0984e3' : '#d63031',
-                    padding: '4px 8px',
-                    borderRadius: '12px',
-                    fontSize: '0.8em',
-                    border: `1px solid ${item.current_stock > 0 ? '#0984e3' : '#d63031'}`
-                  }}
-                >
-                  {item.name} ({item.current_stock} {item.unit})
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

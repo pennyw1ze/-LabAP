@@ -41,58 +41,32 @@ export async function createMenuItem(menuData) {
   }
 }
 
-export async function getInventory() {
+export async function updateMenuItem(menuId, updateData) {
   try {
-    const res = await fetch(`${API_BASE}/inventory/`);
-    if (!res.ok) throw new Error('Failed to fetch inventory');
-    const data = await res.json();
-    return data.success ? data.data : [];
-  } catch (error) {
-    console.error('Error fetching inventory:', error);
-    return [];
-  }
-}
-
-export async function getInventoryAlerts() {
-  try {
-    const res = await fetch(`${API_BASE}/inventory/alerts`);
-    if (!res.ok) throw new Error('Failed to fetch inventory alerts');
-    const data = await res.json();
-    return data.success ? data.data : {};
-  } catch (error) {
-    console.error('Error fetching inventory alerts:', error);
-    return {};
-  }
-}
-
-export async function createInventoryItem(inventoryData) {
-  try {
-    const res = await fetch(`${API_BASE}/inventory/`, {
-      method: "POST",
+    const res = await fetch(`${API_BASE}/menu/${menuId}`, {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(inventoryData),
+      body: JSON.stringify(updateData),
     });
-    if (!res.ok) throw new Error('Failed to create inventory item');
+    if (!res.ok) throw new Error('Failed to update menu item');
     const data = await res.json();
     return data.success ? data.data : null;
   } catch (error) {
-    console.error('Error creating inventory item:', error);
+    console.error('Error updating menu item:', error);
     throw error;
   }
 }
 
-export async function adjustInventoryStock(itemId, adjustment) {
+export async function deleteMenuItem(menuId) {
   try {
-    const res = await fetch(`${API_BASE}/inventory/${itemId}/adjust`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ adjustment }),
+    const res = await fetch(`${API_BASE}/menu/${menuId}`, {
+      method: "DELETE",
     });
-    if (!res.ok) throw new Error('Failed to adjust inventory stock');
+    if (!res.ok) throw new Error('Failed to delete menu item');
     const data = await res.json();
-    return data.success ? data.data : null;
+    return data.success;
   } catch (error) {
-    console.error('Error adjusting inventory stock:', error);
+    console.error('Error deleting menu item:', error);
     throw error;
   }
 }
@@ -194,17 +168,6 @@ export async function removeIngredientFromMenu(menuId, inventoryItemId) {
 }
 
 export async function checkMenuAvailability(menuItemIds = []) {
-  try {
-    const res = await fetch(`${API_BASE}/menu/check-availability`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ menu_item_ids: menuItemIds }),
-    });
-    if (!res.ok) throw new Error('Failed to check menu availability');
-    const data = await res.json();
-    return data.success ? data.data : [];
-  } catch (error) {
-    console.error('Error checking menu availability:', error);
-    return [];
-  }
+  console.warn('checkMenuAvailability is deprecated: availability is now managed manually.');
+  return [];
 }

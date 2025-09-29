@@ -1,12 +1,10 @@
 // byteristo-frontend/src/components/MenuDisplayWithIngredients.js
 import React, { useState, useEffect } from 'react';
-import { getMenu, getInventory, getMenuIngredients, checkMenuAvailability } from '../api';
+import { getMenu, getMenuIngredients } from '../api';
 
 export default function MenuDisplayWithIngredients() {
   const [menuItems, setMenuItems] = useState([]);
-  const [inventory, setInventory] = useState([]);
   const [menuIngredients, setMenuIngredients] = useState({});
-  const [availabilityData, setAvailabilityData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showIngredients, setShowIngredients] = useState({});
@@ -18,13 +16,8 @@ export default function MenuDisplayWithIngredients() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [menuData, inventoryData] = await Promise.all([
-        getMenu(),
-        getInventory()
-      ]);
-      
+      const menuData = await getMenu();
       setMenuItems(menuData);
-      setInventory(inventoryData);
 
       // Load ingredients for each menu item
       const ingredientsPromises = menuData.map(async (item) => {
@@ -41,12 +34,6 @@ export default function MenuDisplayWithIngredients() {
       });
       setMenuIngredients(ingredientsMap);
 
-      // Check availability
-      if (menuData.length > 0) {
-        const availability = await checkMenuAvailability(menuData.map(item => item.id));
-        setAvailabilityData(availability);
-      }
-
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -59,10 +46,6 @@ export default function MenuDisplayWithIngredients() {
       ...prev,
       [menuId]: !prev[menuId]
     }));
-  };
-
-  const getAvailabilityForItem = (menuId) => {
-    return availabilityData.find(item => item.menu_item.id === menuId);
   };
 
   const categories = ['all', 'appetizer', 'main', 'dessert', 'beverage', 'side'];
@@ -86,31 +69,6 @@ export default function MenuDisplayWithIngredients() {
   return (
     <div>
       <h2>Menu Completo con Ingredienti</h2>
-
-      {/* Availability Summary */}
-      {availabilityData.length > 0 && (
-        <div style={{ 
-          backgroundColor: '#e8f5e8', 
-          border: '1px solid #4caf50', 
-          borderRadius: '4px', 
-          padding: '15px', 
-          marginBottom: '20px' 
-        }}>
-          <h3>📊 Riepilogo Disponibilità</h3>
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-            <div>
-              <strong style={{ color: '#4caf50' }}>
-                ✅ {availabilityData.filter(item => item.can_prepare).length} piatti preparabili
-              </strong>
-            </div>
-            <div>
-              <strong style={{ color: '#f44336' }}>
-                ❌ {availabilityData.filter(item => !item.can_prepare).length} piatti non disponibili
-              </strong>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Category Filter */}
       <div style={{ marginBottom: '20px' }}>
@@ -146,30 +104,25 @@ export default function MenuDisplayWithIngredients() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {filteredMenuItems.map((item) => {
-            const availability = getAvailabilityForItem(item.id);
             const ingredients = menuIngredients[item.id];
+            const isVisible = Boolean(item.is_available);
 
             return (
               <div 
                 key={item.id} 
                 style={{ 
-                  border: '1px solid #ddd', 
+                  border: '1px solid transparent',
                   borderRadius: '8px', 
                   padding: '20px',
-                  backgroundColor: availability?.can_prepare ? 'white' : '#fff3e0',
-                  borderColor: availability?.can_prepare ? '#4caf50' : '#ff9800'
+                  backgroundColor: isVisible ? 'white' : '#fff4e6',
+                  borderColor: isVisible ? '#4caf50' : '#ff9f43'
                 }}
               >
                 {/* Menu Item Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
                   <div>
-                    <h3 style={{ margin: 0, color: availability?.can_prepare ? 'black' : '#e65100' }}>
+                    <h3 style={{ margin: 0, color: isVisible ? '#1e272e' : '#d35400' }}>
                       {item.name}
-                      {!availability?.can_prepare && (
-                        <span style={{ color: '#f44336', marginLeft: '8px', fontSize: '0.8em' }}>
-                          (Ingredienti insufficienti)
-                        </span>
-                      )}
                     </h3>
                     <div style={{ 
                       fontSize: '0.9em', 
@@ -213,16 +166,9 @@ export default function MenuDisplayWithIngredients() {
                   fontSize: '0.9em'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {availability?.can_prepare ? (
-                      <span style={{ color: '#4caf50', fontWeight: 'bold' }}>✅ Preparabile</span>
-                    ) : (
-                      <span style={{ color: '#f44336', fontWeight: 'bold' }}>❌ Non preparabile</span>
-                    )}
-                    {item.is_available ? (
-                      <span style={{ color: '#4caf50' }}>📋 Nel menu</span>
-                    ) : (
-                      <span style={{ color: '#ff9800' }}>📋 Temporaneamente rimosso</span>
-                    )}
+                    <span style={{ color: isVisible ? '#4caf50' : '#ff9f43', fontWeight: 'bold' }}>
+                      {isVisible ? '✅ Visibile per gli ordini' : '⏸️ Temporaneamente nascosto'}
+                    </span>
                   </div>
                   
                   <button
@@ -254,34 +200,29 @@ export default function MenuDisplayWithIngredients() {
                     {ingredients && ingredients.ingredients && ingredients.ingredients.length > 0 ? (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '10px' }}>
                         {ingredients.ingredients.map((ing, index) => {
-                          const inventoryItem = ing.inventory_item;
-                          const hasEnough = inventoryItem.current_stock >= ing.quantity;
-                          
+                          const inventoryItem = ing.inventory_item || {};
+                          const ingredientName = inventoryItem.name || ing.name || `Ingrediente ${index + 1}`;
+
                           return (
                             <div 
                               key={index}
                               style={{ 
-                                backgroundColor: hasEnough ? '#e8f5e8' : '#ffebee',
-                                border: `1px solid ${hasEnough ? '#4caf50' : '#f44336'}`,
+                                backgroundColor: '#ffffff',
+                                border: '1px solid #dfe6e9',
                                 borderRadius: '4px',
                                 padding: '10px',
                                 fontSize: '0.9em'
                               }}
                             >
                               <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                                {inventoryItem.name}
+                                {ingredientName}
                               </div>
                               <div style={{ color: '#666', fontSize: '0.8em' }}>
-                                Richiesto: <strong>{ing.quantity} {ing.unit}</strong>
+                                Quantità per porzione: <strong>{ing.quantity} {ing.unit}</strong>
                               </div>
-                              <div style={{ color: '#666', fontSize: '0.8em' }}>
-                                Disponibile: <strong style={{ color: hasEnough ? '#4caf50' : '#f44336' }}>
-                                  {inventoryItem.current_stock} {inventoryItem.unit}
-                                </strong>
-                              </div>
-                              {!hasEnough && (
-                                <div style={{ color: '#f44336', fontSize: '0.8em', marginTop: '4px' }}>
-                                  ⚠️ Mancano {(ing.quantity - inventoryItem.current_stock).toFixed(2)} {ing.unit}
+                              {inventoryItem.supplier && (
+                                <div style={{ color: '#666', fontSize: '0.75em', marginTop: '4px' }}>
+                                  Fornitore: {inventoryItem.supplier}
                                 </div>
                               )}
                             </div>
@@ -292,7 +233,7 @@ export default function MenuDisplayWithIngredients() {
                       <p style={{ margin: 0, color: '#666', fontStyle: 'italic' }}>
                         Nessun ingrediente configurato per questo piatto.
                         <br />
-                        <small>Vai alla sezione "Gestione Menu" per aggiungere ingredienti.</small>
+                        <small>Gestisci gli ingredienti dalla sezione "Gestione Menu".</small>
                       </p>
                     )}
                   </div>
@@ -326,8 +267,8 @@ export default function MenuDisplayWithIngredients() {
         backgroundColor: '#f8f9fa', 
         borderRadius: '8px' 
       }}>
-        <h3>📈 Statistiche Complete</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '16px', textAlign: 'center' }}>
+        <h3>📈 Statistiche Menu</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', textAlign: 'center' }}>
           <div>
             <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#0984e3' }}>
               {menuItems.length}
@@ -336,21 +277,15 @@ export default function MenuDisplayWithIngredients() {
           </div>
           <div>
             <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#4caf50' }}>
-              {availabilityData.filter(item => item.can_prepare).length}
+              {menuItems.filter(item => item.is_available).length}
             </div>
-            <div style={{ color: '#666', fontSize: '0.9em' }}>Preparabili</div>
+            <div style={{ color: '#666', fontSize: '0.9em' }}>Visibili ai camerieri</div>
           </div>
           <div>
-            <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#f44336' }}>
-              {availabilityData.filter(item => !item.can_prepare).length}
+            <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#ff9f43' }}>
+              {menuItems.filter(item => !item.is_available).length}
             </div>
-            <div style={{ color: '#666', fontSize: '0.9em' }}>Non Preparabili</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#ff9800' }}>
-              {inventory.length}
-            </div>
-            <div style={{ color: '#666', fontSize: '0.9em' }}>Ingredienti</div>
+            <div style={{ color: '#666', fontSize: '0.9em' }}>Temporaneamente nascosti</div>
           </div>
           <div>
             <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#9c27b0' }}>
@@ -359,7 +294,7 @@ export default function MenuDisplayWithIngredients() {
                 return total + (ingredients?.ingredients?.length || 0);
               }, 0)}
             </div>
-            <div style={{ color: '#666', fontSize: '0.9em' }}>Associazioni Ingredienti</div>
+            <div style={{ color: '#666', fontSize: '0.9em' }}>Ingredienti associati</div>
           </div>
         </div>
       </div>
