@@ -113,38 +113,6 @@ def create_order():
                 'message': f'Invalid or unavailable menu items: {invalid_items}'
             }), 400
         
-        # Check inventory availability for the order
-        temp_order_items = []
-        for item_data in data['items']:
-            menu_item = MenuService.get_menu_item(item_data['menu_item_id'])
-            if not menu_item:
-                return jsonify({
-                    'success': False,
-                    'message': f'Menu item not found: {item_data["menu_item_id"]}'
-                }), 400
-            
-            # Create temporary order item for availability check
-            temp_item = type('OrderItem', (), {
-                'menu_item_id': item_data['menu_item_id'],
-                'menu_item_name': menu_item['name'],
-                'quantity': int(item_data['quantity'])
-            })
-            temp_order_items.append(temp_item)
-        
-        # Check if we have enough inventory to fulfill the order
-        try:
-            availability_check = InventoryService.check_availability_for_order(temp_order_items)
-            if not availability_check['can_fulfill_order']:
-                unavailable_items = availability_check['unavailable_items']
-                return jsonify({
-                    'success': False,
-                    'message': 'Insufficient inventory for order',
-                    'unavailable_items': unavailable_items
-                }), 400
-        except Exception as e:
-            current_app.logger.warning(f"Could not check inventory availability: {str(e)}")
-            # Continue with order creation but log the warning
-        
         # Generate order number
         order_number = f"ORD-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
         
