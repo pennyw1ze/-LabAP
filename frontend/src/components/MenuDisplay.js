@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getMenu, getInventory } from '../api';
+import { getMenu } from '../api';
 
 export default function MenuDisplay() {
   const [menuItems, setMenuItems] = useState([]);
-  const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -14,12 +13,8 @@ export default function MenuDisplay() {
   const loadMenuData = async () => {
     setLoading(true);
     try {
-      const [menuData, inventoryData] = await Promise.all([
-        getMenu(),
-        getInventory()
-      ]);
+      const menuData = await getMenu();
       setMenuItems(menuData);
-      setInventory(inventoryData);
     } catch (error) {
       console.error('Error loading menu:', error);
     } finally {
@@ -175,9 +170,8 @@ export default function MenuDisplay() {
                 fontSize: '0.8em',
                 color: '#666'
               }}>
-                <strong>📝 Nota:</strong> La connessione con gli ingredienti dell'inventory 
-                richiede l'implementazione della tabella di associazione many-to-many nel backend. 
-                Attualmente visualizziamo solo i dati base del menu.
+                <strong>📝 Nota:</strong> La gestione degli ingredienti avviene ora manualmente. 
+                Questa vista mostra i dati principali del menu; eventuali dettagli aggiuntivi possono essere gestiti tramite strumenti dedicati.
               </div>
             </div>
           ))}
@@ -210,12 +204,6 @@ export default function MenuDisplay() {
               {menuItems.filter(item => !item.is_available).length}
             </div>
             <div style={{ color: '#666' }}>Non Disponibili</div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#e17000' }}>
-              {inventory.length}
-            </div>
-            <div style={{ color: '#666' }}>Ingredienti</div>
           </div>
         </div>
       </div>

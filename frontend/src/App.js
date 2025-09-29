@@ -5,7 +5,6 @@ import './App.css';
 import MenuDisplay from './components/MenuDisplay';
 import MenuManagement from './components/MenuManagement';
 import MenuDisplayWithIngredients from './components/MenuDisplayWithIngredients';
-import Inventory from './components/Inventory';
 import Analytics from './components/Analytics';
 import Bills from './components/Bills';
 import Payments from './components/Payments';
@@ -25,7 +24,6 @@ function App() {
     { id: 'menu', label: '🍽️ Menu', component: <MenuDisplay /> },
     { id: 'menuWithIngredients', label: '🥘 Menu Completo', component: <MenuDisplayWithIngredients /> },
     { id: 'menuManagement', label: '⚙️ Gestione Menu', component: <MenuManagement /> },
-    { id: 'inventory', label: '📦 Inventory', component: <Inventory /> },
     { id: 'analytics', label: '📈 Analytics', component: <Analytics /> },
     { id: 'bills', label: '🧾 Bills', component: <Bills /> },
     { id: 'payments', label: '💳 Payments', component: <Payments /> },

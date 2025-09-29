@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getMenu, createOrder, checkMenuAvailability } from '../api';
+import { getMenu, createOrder } from '../api';
 
 export default function OrderTaking() {
   const [menuItems, setMenuItems] = useState([]);
-  const [availabilityData, setAvailabilityData] = useState([]);
   const [currentOrder, setCurrentOrder] = useState({
     table_number: '',
     customer_name: '',
@@ -25,12 +24,6 @@ export default function OrderTaking() {
     try {
       const menuData = await getMenu();
       setMenuItems(menuData.filter(item => item.is_available));
-      
-      // Check availability for all menu items
-      if (menuData.length > 0) {
-        const availability = await checkMenuAvailability(menuData.map(item => item.id));
-        setAvailabilityData(availability);
-      }
     } catch (error) {
       console.error('Error loading menu:', error);
       alert('Errore nel caricamento del menu');
@@ -40,13 +33,6 @@ export default function OrderTaking() {
   };
 
   const addItemToOrder = (menuItem) => {
-    const availability = availabilityData.find(item => item.menu_item.id === menuItem.id);
-    
-    if (!availability?.can_prepare) {
-      alert(`Impossibile ordinare ${menuItem.name}: ingredienti insufficienti`);
-      return;
-    }
-
     const existingItemIndex = currentOrder.items.findIndex(item => item.menu_item_id === menuItem.id);
     
     if (existingItemIndex >= 0) {
@@ -159,7 +145,7 @@ export default function OrderTaking() {
 
       alert(`Ordine ${result.order_number} inviato con successo alla cucina!`);
       
-      // Refresh availability data
+      // Aggiorna il menu per riflettere eventuali variazioni di disponibilità manuale
       loadMenuData();
       
     } catch (error) {
@@ -168,10 +154,6 @@ export default function OrderTaking() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const getAvailabilityForItem = (menuId) => {
-    return availabilityData.find(item => item.menu_item.id === menuId);
   };
 
   const categories = ['all', 'appetizer', 'main', 'dessert', 'beverage', 'side'];
@@ -224,25 +206,20 @@ export default function OrderTaking() {
 
         {/* Menu Items Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px', maxHeight: '600px', overflowY: 'auto' }}>
-          {filteredMenuItems.map((item) => {
-            const availability = getAvailabilityForItem(item.id);
-            const canOrder = availability?.can_prepare !== false;
-
-            return (
+          {filteredMenuItems.map((item) => (
               <div 
                 key={item.id} 
                 style={{ 
                   border: '1px solid #ddd', 
                   borderRadius: '6px', 
                   padding: '12px',
-                  backgroundColor: canOrder ? 'white' : '#fff3e0',
-                  opacity: canOrder ? 1 : 0.7,
-                  cursor: canOrder ? 'pointer' : 'not-allowed'
+                  backgroundColor: 'white',
+                  cursor: 'pointer'
                 }}
-                onClick={() => canOrder && addItemToOrder(item)}
+                onClick={() => addItemToOrder(item)}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                  <h4 style={{ margin: 0, fontSize: '1em', color: canOrder ? 'black' : '#666' }}>
+                  <h4 style={{ margin: 0, fontSize: '1em', color: 'black' }}>
                     {item.name}
                   </h4>
                   <div style={{ textAlign: 'right' }}>
@@ -263,35 +240,32 @@ export default function OrderTaking() {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8em' }}>
                   <span style={{ 
-                    color: canOrder ? '#4caf50' : '#f44336',
+                    color: '#4caf50',
                     fontWeight: 'bold'
                   }}>
-                    {canOrder ? '✅ Disponibile' : '❌ Non disponibile'}
+                    ✅ Disponibile
                   </span>
                   
-                  {canOrder && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addItemToOrder(item);
-                      }}
-                      style={{
-                        backgroundColor: '#4caf50',
-                        color: 'white',
-                        border: 'none',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.8em'
-                      }}
-                    >
-                      + Aggiungi
-                    </button>
-                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addItemToOrder(item);
+                    }}
+                    style={{
+                      backgroundColor: '#4caf50',
+                      color: 'white',
+                      border: 'none',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.8em'
+                    }}
+                  >
+                    + Aggiungi
+                  </button>
                 </div>
               </div>
-            );
-          })}
+            ))}
         </div>
       </div>
 
