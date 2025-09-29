@@ -1,4 +1,3 @@
-// byteristo-frontend/src/api.js - Updated version
 const API_BASE = "http://localhost:3001/api"; // Porta corretta del microservizio
 
 // --- Menu & Inventory ---

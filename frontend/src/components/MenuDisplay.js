@@ -1,4 +1,3 @@
-// byteristo-frontend/src/components/MenuDisplay.js - Updated version
 import React, { useState, useEffect } from 'react';
 import { getMenu, getInventory } from '../api';
 
@@ -26,10 +25,6 @@ export default function MenuDisplay() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getInventoryItemById = (id) => {
-    return inventory.find(item => item.id === id);
   };
 
   const categories = ['all', 'appetizer', 'main', 'dessert', 'beverage', 'side'];
