@@ -50,7 +50,7 @@ ByteRisto follows a microservices architecture with the following key components
 
 5. **Or manually start services**
    ```bash
-   docker-compose up --build -d
+   sudo docker-compose up --build -d
    ```
 
 6. **Test APIs**
