@@ -8,18 +8,19 @@ class Config:
     # Database
     DB_HOST = os.environ.get('DB_HOST', 'localhost')
     DB_PORT = os.environ.get('DB_PORT', '5432')
-    DB_NAME = os.environ.get('DB_NAME', 'orders_db')
-    DB_USER = os.environ.get('DB_USER', 'orders_user')
-    DB_PASSWORD = os.environ.get('DB_PASSWORD', 'orders_password')
+    DB_NAME = os.environ.get('DB_NAME', 'order_management_db')
+    DB_USER = os.environ.get('DB_USER', 'order_user')
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', 'order_password')
     
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///order_management.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # External Services
+    MENU_SERVICE_URL = os.environ.get('MENU_SERVICE_URL', 'http://localhost:3001')
+    PAYMENT_SERVICE_URL = os.environ.get('PAYMENT_SERVICE_URL', 'http://localhost:3003')
     
     # RabbitMQ
     RABBITMQ_URL = os.environ.get('RABBITMQ_URL', 'amqp://admin:password@localhost:5672')
-    
-    # External services
-    MENU_SERVICE_URL = os.environ.get('MENU_SERVICE_URL', 'http://localhost:3001')
     
     # Flask settings
     PORT = int(os.environ.get('PORT', 3002))
@@ -32,10 +33,12 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
+    MENU_SERVICE_URL = 'http://localhost:3001'
 
 class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
+    MENU_SERVICE_URL = os.environ.get('MENU_SERVICE_URL', 'http://menu-inventory-service:3001')
 
 class TestConfig(Config):
     """Test configuration."""

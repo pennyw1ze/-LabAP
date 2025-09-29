@@ -163,7 +163,8 @@ def create_bill():
         if existing_bill:
             return jsonify({
                 'success': False,
-                'message': 'Bill already exists for this order'
+                'message': 'Bill already exists for this order',
+                'bill': existing_bill.to_dict()
             }), 400
         
         # Get order details from order service
@@ -174,6 +175,14 @@ def create_bill():
                     'success': False,
                     'message': 'Order not found'
                 }), 404
+                
+            # Check if order is ready for billing (must be ready or delivered)
+            if order['status'] not in ['ready', 'delivered']:
+                return jsonify({
+                    'success': False,
+                    'message': f'Order must be ready or delivered to create bill. Current status: {order["status"]}'
+                }), 400
+                
         except Exception as e:
             return jsonify({
                 'success': False,
@@ -204,6 +213,14 @@ def create_bill():
         
         db.session.add(bill)
         db.session.commit()
+        
+        # Notify order service that bill was created
+        try:
+            from services.order_update_service import OrderUpdateService
+            OrderUpdateService.mark_order_as_billed(data['order_id'])
+        except Exception as e:
+            # Don't fail the bill creation if notification fails
+            current_app.logger.warning(f"Could not notify order service: {str(e)}")
         
         return jsonify({
             'success': True,
@@ -272,7 +289,7 @@ def process_payment():
             payment_method=data['payment_method'],
             reference_number=data.get('reference_number'),
             notes=data.get('notes'),
-            status='completed',  # For simplicity, assume all payments are immediately completed
+            status='completed',
             processed_at=datetime.utcnow()
         )
         
@@ -280,13 +297,25 @@ def process_payment():
         
         # Update bill status
         new_paid_amount = paid_amount + data['amount']
+        was_fully_paid = False
+        
         if new_paid_amount >= float(bill.total_amount):
             bill.status = 'paid'
             bill.paid_at = datetime.utcnow()
+            was_fully_paid = True
         elif new_paid_amount > 0:
             bill.status = 'partially_paid'
         
         db.session.commit()
+        
+        # If bill is fully paid, notify order service
+        if was_fully_paid:
+            try:
+                from services.order_update_service import OrderUpdateService
+                OrderUpdateService.mark_order_as_paid(str(bill.order_id))
+                current_app.logger.info(f"Order {bill.order_number} marked as paid")
+            except Exception as e:
+                current_app.logger.warning(f"Could not notify order service about payment: {str(e)}")
         
         return jsonify({
             'success': True,
