@@ -234,10 +234,14 @@ def delete_menu_item(menu_id):
                 'success': False,
                 'message': 'Menu item not found'
             }), 404
-        
+
+        # Ensure ingredient relationships are cleared to avoid FK constraint errors
+        menu_item.ingredients = []
+        db.session.flush()
+
         db.session.delete(menu_item)
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': 'Menu item deleted successfully'
