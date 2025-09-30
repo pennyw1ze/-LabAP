@@ -18,6 +18,29 @@ const getInitialFormState = () => ({
   }
 });
 
+const AvailabilityToggle = ({
+  checked,
+  onChange,
+  name = 'is_available',
+  id,
+  labelOn = 'Disponibile',
+  labelOff = 'Non disponibile'
+}) => (
+  <label className="availability-toggle">
+    <input
+      id={id}
+      type="checkbox"
+      name={name}
+      checked={checked}
+      onChange={onChange}
+    />
+    <span className="availability-toggle__slider" aria-hidden="true" />
+    <span className="availability-toggle__label">
+      {checked ? labelOn : labelOff}
+    </span>
+  </label>
+);
+
 export default function MenuManagement() {
   const [menuItems, setMenuItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
@@ -290,16 +313,15 @@ export default function MenuManagement() {
             />
           </div>
 
-          <label style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-            <input
-              type="checkbox"
-              name="is_available"
+          <div style={{ marginBottom: '15px' }}>
+            <AvailabilityToggle
+              id={editingItem ? `menu-availability-${editingItem.id}` : 'menu-availability-new'}
               checked={formData.is_available}
               onChange={handleInputChange}
-              style={{ marginRight: '8px' }}
+              labelOn="Disponibile per gli ordini"
+              labelOff="Non disponibile"
             />
-            Disponibile per gli ordini
-          </label>
+          </div>
 
           {/* Ingredient Selection Note */}
           <div style={{ 
@@ -379,20 +401,13 @@ export default function MenuManagement() {
                       {item.preparation_time} min
                     </td>
                     <td style={{ padding: '8px' }}>
-                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={item.is_available}
-                          onChange={() => handleToggleAvailability(item)}
-                          style={{ width: '18px', height: '18px' }}
-                        />
-                        <span style={{
-                          color: item.is_available ? '#00b894' : '#d63031',
-                          fontWeight: 'bold'
-                        }}>
-                          {item.is_available ? 'Disponibile' : 'Non disponibile'}
-                        </span>
-                      </label>
+                      <AvailabilityToggle
+                        id={`availability-${item.id}`}
+                        checked={item.is_available}
+                        onChange={() => handleToggleAvailability(item)}
+                        labelOn="Disponibile"
+                        labelOff="Non disponibile"
+                      />
                     </td>
                     <td style={{ padding: '8px' }}>
                       {item.allergens && item.allergens.length > 0 ? (
