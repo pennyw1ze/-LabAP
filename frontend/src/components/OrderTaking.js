@@ -22,8 +22,8 @@ export default function OrderTaking() {
   const loadMenuData = async () => {
     setLoading(true);
     try {
-      const menuData = await getMenu();
-      setMenuItems(menuData.filter(item => item.is_available));
+      const menuData = await getMenu({ available: true });
+      setMenuItems(menuData);
     } catch (error) {
       console.error('Error loading menu:', error);
       alert('Errore nel caricamento del menu');

@@ -1,9 +1,22 @@
 const API_BASE = "http://localhost:3001/api"; // Porta corretta del microservizio
 
 // --- Menu & Inventory ---
-export async function getMenu() {
+export async function getMenu(filters = {}) {
   try {
-    const res = await fetch(`${API_BASE}/menu/`);
+    const params = new URLSearchParams();
+
+    if (filters.category) {
+      params.append('category', filters.category);
+    }
+
+    if (filters.available !== undefined) {
+      params.append('available', filters.available ? 'true' : 'false');
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `${API_BASE}/menu/?${queryString}` : `${API_BASE}/menu/`;
+
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch menu');
     const data = await res.json();
     return data.success ? data.data : [];
