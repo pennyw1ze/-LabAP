@@ -35,58 +35,58 @@ function App() {
 
   return (
     <div className="App">
+      <header className="app-topbar app-topbar--fixed">
+        <div className="app-topbar__content">
+          <div className="app-topbar__row">
+            <div>
+              <h1 className="app-topbar__title">🍴 ByteRisto</h1>
+            </div>
+
+            <div className="app-status-strip">
+              <span className="app-clock">
+                {currentTime.toLocaleString('it-IT', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              </span>
+              <span className="app-status-pill">🔥 Sistema Attivo</span>
+            </div>
+          </div>
+
+          <div className="app-topbar__tabs">
+            <div className="app-tabs__inner">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`app-tab ${activeTab === tab.id ? 'app-tab--active' : ''}`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="app-shell">
-        <header className="app-topbar">
-          <div>
-            <h1 className="app-topbar__title">🍴 ByteRisto</h1>
-            <p className="app-topbar__subtitle">Sistema di Gestione Ristorante</p>
-          </div>
-
-          <div className="app-status-strip">
-            <span className="app-clock">
-              {currentTime.toLocaleString('it-IT', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-              })}
-            </span>
-            <span className="app-status-pill">🔥 Sistema Attivo</span>
-          </div>
-        </header>
-
-        <nav className="app-tabs">
-          <div className="app-tabs__inner">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                type="button"
-                className={`app-tab ${activeTab === tab.id ? 'app-tab--active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </nav>
-
         <main className="app-content">
           <div className="scroll-wrap">
             <div className="scroll-wrap__inner">
-              {activeComponent}
+              <div className="content-panel glass-card">
+                {activeComponent}
+              </div>
             </div>
           </div>
         </main>
 
         <footer className="app-footer">
-          <div>ByteRisto v2.0 · Sistema di Gestione Integrato</div>
-          <div className="app-footer__meta">
-            <span className="glass-chip">🔗 Menu Service: Attivo</span>
-            <span className="glass-chip">🔗 Order Management Service: Attivo</span>
-            <span className="glass-chip">📡 Real-time Updates: Attivi</span>
-          </div>
+          <div>ByteRisto v2.0 · Sistema di Gestione Ristorante Integrato</div>
         </footer>
       </div>
     </div>

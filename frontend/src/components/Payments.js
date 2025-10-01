@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getPayments, makePayment } from "../api";
+import { getPayments } from "../api";
 
 export default function Payments() {
   const [payments, setPayments] = useState([]);
@@ -19,34 +19,15 @@ export default function Payments() {
       .catch(err => console.error(err));
   }, []);
 
-  const handlePayment = async (payment) => {
-    try {
-      const result = await makePayment(payment);
-      setPayments(prev => [...prev, result]);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   return (
     <section className="payments">
       <div>
         <h2>💳 Pagamenti</h2>
-        <span className="text-muted">Gestisci le transazioni con un pannello in stile Liquid Glass.</span>
-      </div>
-
-      <div className="payments__actions">
-        <button
-          type="button"
-          className="button-glass button-glass--primary"
-          onClick={() => handlePayment({ orderId: "esempio-id", amount: 20 })}
-        >
-          ➕ Simula Pagamento
-        </button>
+          <span className="text-muted">Genera i pagamenti per i tuoi ordini</span>
       </div>
 
       {payments.length === 0 ? (
-        <div className="empty-state">Nessun pagamento registrato.</div>
+        <div className="empty-state">Nessun ordine da saldare</div>
       ) : (
         <ul className="payments__list">
           {payments.map((payment) => (

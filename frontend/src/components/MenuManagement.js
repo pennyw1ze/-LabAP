@@ -47,6 +47,17 @@ export default function MenuManagement() {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState(getInitialFormState());
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const categories = ['all', 'appetizer', 'main', 'dessert', 'beverage', 'side'];
+  const categoryLabels = {
+    all: 'Tutti',
+    appetizer: 'Antipasti',
+    main: 'Primi Piatti',
+    dessert: 'Dolci',
+    beverage: 'Bevande',
+    side: 'Contorni'
+  };
 
   useEffect(() => {
     loadData();
@@ -134,7 +145,7 @@ export default function MenuManagement() {
       await loadData();
     } catch (error) {
       console.error('Error deleting menu item:', error);
-      alert('Errore durante l\'eliminazione del piatto');
+      alert("Errore durante l'eliminazione del piatto");
     }
   };
 
@@ -148,7 +159,7 @@ export default function MenuManagement() {
       }
     } catch (error) {
       console.error('Error updating availability:', error);
-      alert('Errore nell\'aggiornamento della disponibilità');
+      alert("Errore nell'aggiornamento della disponibilità");
     }
   };
 
@@ -172,7 +183,7 @@ export default function MenuManagement() {
   };
 
   const renderNutritionalFields = () => (
-    <div className="menu-management__form-grid">
+    <div className="menu-management__nutrition-grid">
       {['calories', 'protein', 'carbs', 'fat'].map((field) => (
         <div key={field} className="form-field">
           <label className="form-label" htmlFor={`nutritional-${field}`}>
@@ -186,35 +197,44 @@ export default function MenuManagement() {
             value={formData.nutritional_info[field]}
             onChange={handleInputChange}
             min="0"
+            step={field === 'calories' ? '1' : '0.1'}
           />
         </div>
       ))}
     </div>
   );
 
+  const filteredMenuItems = selectedCategory === 'all'
+    ? menuItems
+    : menuItems.filter(item => item.category === selectedCategory);
+
   if (loading) {
     return <div className="glass-card loading-panel">Caricamento dati menu...</div>;
   }
 
   return (
-    <div className="menu-management">
-      <section className="menu-management__panel">
+    <div className="menu-management menu-management--legacy">
+      <section className="menu-management__panel menu-management__panel--legacy">
         <div className="menu-management__header">
           <div>
             <h2>🛠️ Gestione Menu</h2>
-            <span className="text-muted">Modifica, aggiorna e mantieni il menu con uno stile trasparente.</span>
+            <span className="text-muted">Aggiungi, modifica o rimuovi i piatti dal menu in un flusso unico.</span>
           </div>
           <div className="menu-management__filters">
             <button
               type="button"
               className="button-glass button-glass--primary"
               onClick={() => {
-                setShowAddForm(true);
-                setEditingItem(null);
-                setFormData(getInitialFormState());
+                if (showAddForm) {
+                  resetForm();
+                } else {
+                  setEditingItem(null);
+                  setFormData(getInitialFormState());
+                  setShowAddForm(true);
+                }
               }}
             >
-              ➕ Nuovo Piatto
+              {showAddForm ? (editingItem ? 'Annulla modifica' : 'Annulla') : '➕ Nuovo Piatto'}
             </button>
             <button type="button" className="button-glass" onClick={loadData}>
               🔄 Aggiorna
@@ -222,116 +242,40 @@ export default function MenuManagement() {
           </div>
         </div>
 
-        <div className="menu-management__items">
-          {menuItems.length === 0 ? (
-            <div className="empty-state">Nessun piatto presente. Aggiungi il primo elemento per iniziare.</div>
-          ) : (
-            menuItems.map((item) => (
-              <article key={item.id} className="menu-management__item">
-                <div className="menu-management__item-header">
-                  <div>
-                    <h3>{item.name}</h3>
-                    {item.description && <p className="text-muted">{item.description}</p>}
-                  </div>
-                  <div className="menu-display__price">
-                    <div>€{item.price}</div>
-                    <small className="text-muted">{item.category}</small>
-                  </div>
-                </div>
-
-                <div className="menu-management__item-meta">
-                  <span>⏱️ {item.preparation_time} min</span>
-                  {item.allergens && item.allergens.length > 0 && (
-                    <span className="glass-chip">⚠️ Allergeni: {item.allergens.join(', ')}</span>
-                  )}
-                  <AvailabilityToggle
-                    id={`availability-${item.id}`}
-                    checked={Boolean(item.is_available)}
-                    labelOn="Disponibile"
-                    labelOff="Non disp."
-                    onChange={() => handleToggleAvailability(item)}
-                  />
-                </div>
-
-                {item.nutritional_info && (
-                  <div className="text-muted" style={{ fontSize: '0.8rem' }}>
-                    {item.nutritional_info.calories && <span>🔥 {item.nutritional_info.calories} kcal</span>}
-                    {item.nutritional_info.protein && <span style={{ marginLeft: '12px' }}>💪 {item.nutritional_info.protein} g proteine</span>}
-                    {item.nutritional_info.carbs && <span style={{ marginLeft: '12px' }}>🌾 {item.nutritional_info.carbs} g carboidrati</span>}
-                    {item.nutritional_info.fat && <span style={{ marginLeft: '12px' }}>🥑 {item.nutritional_info.fat} g grassi</span>}
-                  </div>
-                )}
-
-                <div className="menu-management__item-actions">
-                  <button
-                    type="button"
-                    className="button-glass"
-                    onClick={() => handleEdit(item)}
-                  >
-                    ✏️ Modifica
-                  </button>
-                  <button
-                    type="button"
-                    className="button-glass button-glass--danger"
-                    onClick={() => handleDelete(item)}
-                  >
-                    🗑️ Elimina
-                  </button>
-                  <button
-                    type="button"
-                    className={`button-glass ${item.is_available ? 'button-glass--danger' : 'button-glass--success'}`}
-                    onClick={() => handleToggleAvailability(item)}
-                  >
-                    {item.is_available ? 'Sospendi' : 'Rendi disponibile'}
-                  </button>
-                </div>
-              </article>
-            ))
-          )}
-        </div>
-      </section>
-
-      <aside className="menu-management__panel">
-        <div className="menu-management__header">
-          <div>
-            <h3>{editingItem ? '✏️ Modifica Piatto' : '➕ Nuovo Piatto'}</h3>
-            <span className="text-muted">
-              {editingItem ? 'Aggiorna le informazioni del piatto selezionato.' : 'Compila il modulo per aggiungere un nuovo piatto al menu.'}
-            </span>
-          </div>
-          {(showAddForm || editingItem) && (
-            <button type="button" className="button-glass" onClick={resetForm}>
-              Annulla
-            </button>
-          )}
-        </div>
-
-        {showAddForm || editingItem ? (
+        {showAddForm && (
           <form className="menu-management__form" onSubmit={handleSubmit}>
-            <div className="form-field">
-              <label className="form-label" htmlFor="name">Nome</label>
-              <input
-                id="name"
-                name="name"
-                className="input-glass"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
+            <h3 className="menu-management__form-title">
+              {editingItem ? `✏️ Modifica: ${editingItem.name}` : '➕ Nuovo Piatto'}
+            </h3>
 
-            <div className="form-field">
-              <label className="form-label" htmlFor="description">Descrizione</label>
-              <textarea
-                id="description"
-                name="description"
-                className="textarea-glass menu-management__textarea"
-                value={formData.description}
-                onChange={handleInputChange}
-              />
-            </div>
+            <div className="menu-management__form-grid menu-management__form-grid--split">
+              <div className="form-field">
+                <label className="form-label" htmlFor="name">Nome</label>
+                <input
+                  id="name"
+                  name="name"
+                  className="input-glass"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-            <div className="menu-management__form-grid">
+              <div className="form-field">
+                <label className="form-label" htmlFor="category">Categoria</label>
+                <select
+                  id="category"
+                  name="category"
+                  className="select-glass"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                >
+                  {categories.filter(category => category !== 'all').map(category => (
+                    <option key={category} value={category}>{categoryLabels[category]}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="form-field">
                 <label className="form-label" htmlFor="price">Prezzo (€)</label>
                 <input
@@ -348,23 +292,6 @@ export default function MenuManagement() {
               </div>
 
               <div className="form-field">
-                <label className="form-label" htmlFor="category">Categoria</label>
-                <select
-                  id="category"
-                  name="category"
-                  className="select-glass"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                >
-                  <option value="appetizer">Antipasto</option>
-                  <option value="main">Piatto Principale</option>
-                  <option value="dessert">Dessert</option>
-                  <option value="beverage">Bevanda</option>
-                  <option value="side">Contorno</option>
-                </select>
-              </div>
-
-              <div className="form-field">
                 <label className="form-label" htmlFor="preparation_time">Preparazione (min)</label>
                 <input
                   id="preparation_time"
@@ -376,46 +303,151 @@ export default function MenuManagement() {
                   onChange={handleInputChange}
                 />
               </div>
-
-              <div className="form-field">
-                <label className="form-label" htmlFor="allergens">Allergeni (comma separated)</label>
-                <input
-                  id="allergens"
-                  name="allergens"
-                  className="input-glass"
-                  value={formData.allergens}
-                  onChange={handleInputChange}
-                />
-              </div>
             </div>
 
-            <div>
+            <div className="form-field">
+              <label className="form-label" htmlFor="description">Descrizione</label>
+              <textarea
+                id="description"
+                name="description"
+                className="textarea-glass menu-management__textarea"
+                value={formData.description}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="form-field">
+              <label className="form-label" htmlFor="allergens">Allergeni (separati da virgola)</label>
+              <input
+                id="allergens"
+                name="allergens"
+                className="input-glass"
+                value={formData.allergens}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            {renderNutritionalFields()}
+
+            <div className="menu-management__form-row">
               <strong className="text-muted">Disponibilità</strong>
               <AvailabilityToggle
                 id="form-availability"
                 checked={formData.is_available}
-                onChange={(e) => setFormData(prev => ({ ...prev, is_available: e.target.checked }))}
+                onChange={handleInputChange}
               />
             </div>
 
-            <div>
-              <strong className="text-muted">Informazioni Nutrizionali</strong>
-              {renderNutritionalFields()}
+            <div className="menu-management__note">
+              <strong>📝 Nota:</strong> Regola disponibilità e dettagli del piatto prima di salvarlo.
             </div>
 
-            <button
-              type="submit"
-              className="button-glass button-glass--success menu-management__submit"
-            >
-              {editingItem ? '💾 Aggiorna Piatto' : '🚀 Aggiungi al Menu'}
-            </button>
+            <div className="menu-management__form-actions">
+              <button type="submit" className="button-glass button-glass--primary menu-management__submit">
+                {editingItem ? 'Salva Modifiche' : 'Salva Piatto'}
+              </button>
+              <button type="button" className="button-glass" onClick={resetForm}>
+                Annulla
+              </button>
+            </div>
           </form>
-        ) : (
-          <div className="empty-state">
-            Seleziona un piatto da modificare oppure crea un nuovo piatto per iniziare.
+        )}
+
+        {!showAddForm && !editingItem && (
+          <div className="menu-management__empty-hint text-muted">
+            Premi "Nuovo Piatto" per aggiungere un elemento oppure modifica un piatto dalla tabella.
           </div>
         )}
-      </aside>
+      </section>
+
+      <section className="menu-management__panel menu-management__panel--legacy">
+        <div className="menu-management__list-header">
+          <h3>Piatti attuali ({menuItems.length})</h3>
+          <div className="menu-management__category-filters">
+            {categories.map(category => (
+              <button
+                key={category}
+                type="button"
+                className={`button-glass menu-management__category-button ${selectedCategory === category ? 'button-glass--primary' : ''}`}
+                onClick={() => setSelectedCategory(category)}
+              >
+                {categoryLabels[category]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {menuItems.length === 0 ? (
+          <div className="empty-state">Nessun piatto presente. Aggiungi il primo elemento per iniziare.</div>
+        ) : filteredMenuItems.length === 0 ? (
+          <div className="empty-state">
+            Nessun piatto nella categoria "{categoryLabels[selectedCategory]}".
+          </div>
+        ) : (
+          <div className="menu-management__table-wrap">
+            <table className="menu-management__table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Categoria</th>
+                  <th>Prezzo</th>
+                  <th>Prep.</th>
+                  <th>Disponibilità</th>
+                  <th>Allergeni</th>
+                  <th className="menu-management__table-actions">Azioni</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMenuItems.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="menu-management__table-name">
+                        <strong>{item.name}</strong>
+                        {item.description && <span className="text-muted">{item.description}</span>}
+                      </div>
+                    </td>
+                    <td className="menu-management__table-category">{categoryLabels[item.category] || item.category}</td>
+                    <td className="menu-management__table-price">€{item.price}</td>
+                    <td>{item.preparation_time} min</td>
+                    <td>
+                      <AvailabilityToggle
+                        id={`availability-${item.id}`}
+                        checked={Boolean(item.is_available)}
+                        onChange={() => handleToggleAvailability(item)}
+                      />
+                    </td>
+                    <td>
+                      {item.allergens && item.allergens.length > 0 ? (
+                        <span className="menu-management__table-allergens">{item.allergens.join(', ')}</span>
+                      ) : (
+                        <span className="text-muted">Nessuno</span>
+                      )}
+                    </td>
+                    <td>
+                      <div className="menu-management__table-buttons">
+                        <button
+                          type="button"
+                          className="button-glass"
+                          onClick={() => handleEdit(item)}
+                        >
+                          ✏️ Modifica
+                        </button>
+                        <button
+                          type="button"
+                          className="button-glass button-glass--danger"
+                          onClick={() => handleDelete(item)}
+                        >
+                          🗑️ Elimina
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
