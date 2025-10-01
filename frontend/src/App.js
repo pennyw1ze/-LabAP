@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 // Import existing components
@@ -15,6 +15,12 @@ import ActiveOrders from './components/ActiveOrders';
 
 function App() {
   const [activeTab, setActiveTab] = useState('orderTaking');
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const tabs = [
     { id: 'orderTaking', label: '📋 Presa Ordini', component: <OrderTaking /> },
@@ -64,7 +70,14 @@ function App() {
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <div style={{ fontSize: '0.9em', opacity: 0.8 }}>
-            {new Date().toLocaleString('it-IT')}
+            {currentTime.toLocaleString('it-IT', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            })}
           </div>
           
           {/* Quick Status Indicators */}
