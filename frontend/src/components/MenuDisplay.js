@@ -32,181 +32,123 @@ export default function MenuDisplay() {
     side: 'Contorni'
   };
 
-  const filteredMenuItems = selectedCategory === 'all' 
-    ? menuItems 
+  const filteredMenuItems = selectedCategory === 'all'
+    ? menuItems
     : menuItems.filter(item => item.category === selectedCategory);
 
   if (loading) {
-    return <div>Caricamento menu...</div>;
+    return <div className="glass-card loading-panel">Caricamento menu...</div>;
   }
 
   return (
-    <div>
-      <h2>Menu del Ristorante</h2>
+    <div className="menu-display">
+      <div className="menu-display__header">
+        <div>
+          <h2>🍽️ Menu del Ristorante</h2>
+          <span className="text-muted">Consulta i piatti disponibili con un tocco glassato.</span>
+        </div>
+        <button type="button" className="button-glass button-glass--primary" onClick={loadMenuData}>
+          🔄 Aggiorna Menu
+        </button>
+      </div>
 
-      {/* Category Filter */}
-      <div style={{ marginBottom: '20px' }}>
-        <h3>Filtra per categoria:</h3>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      <section className="menu-display__filters">
+        <h3>Filtra per categoria</h3>
+        <div className="menu-display__categories">
           {categories.map(category => (
             <button
               key={category}
+              type="button"
+              className={`button-glass menu-display__category-button ${selectedCategory === category ? 'button-glass--primary' : ''}`}
               onClick={() => setSelectedCategory(category)}
-              style={{
-                backgroundColor: selectedCategory === category ? '#0984e3' : '#ddd',
-                color: selectedCategory === category ? 'white' : 'black',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
             >
               {categoryLabels[category]}
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Menu Items */}
-      {filteredMenuItems.length === 0 ? (
-        <p>
-          {menuItems.length === 0 
-            ? 'Nessun piatto disponibile. Aggiungi degli articoli al menu dal backend.'
-            : `Nessun piatto nella categoria "${categoryLabels[selectedCategory]}".`
-          }
-        </p>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-          {filteredMenuItems.map((item) => (
-            <div 
-              key={item.id} 
-              style={{ 
-                border: '1px solid #ddd', 
-                borderRadius: '8px', 
-                padding: '16px',
-                backgroundColor: item.is_available ? 'white' : '#f8f8f8',
-                opacity: item.is_available ? 1 : 0.7
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                <h3 style={{ margin: 0, color: item.is_available ? 'black' : '#666' }}>
-                  {item.name}
-                  {!item.is_available && <span style={{ color: '#d63031', marginLeft: '8px' }}>(Non Disponibile)</span>}
-                </h3>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ 
-                    fontSize: '1.2em', 
-                    fontWeight: 'bold', 
-                    color: '#0984e3' 
-                  }}>
-                    €{item.price}
+      <section>
+        {filteredMenuItems.length === 0 ? (
+          <div className="empty-state">
+            {menuItems.length === 0
+              ? 'Nessun piatto disponibile. Aggiungi articoli al menu dal backend.'
+              : `Nessun piatto nella categoria "${categoryLabels[selectedCategory]}".`}
+          </div>
+        ) : (
+          <div className="menu-display__grid">
+            {filteredMenuItems.map((item) => (
+              <article key={item.id} className="menu-display__card">
+                <div className="menu-display__card-header">
+                  <div>
+                    <h3 style={{ margin: 0 }}>{item.name}</h3>
+                    {!item.is_available && (
+                      <span className="overdue">(Non Disponibile)</span>
+                    )}
                   </div>
-                  <div style={{ 
-                    fontSize: '0.8em', 
-                    color: '#666',
-                    textTransform: 'capitalize'
-                  }}>
-                    {categoryLabels[item.category]}
+                  <div className="menu-display__price">
+                    <div>€{item.price}</div>
+                    <small className="text-muted">{categoryLabels[item.category]}</small>
                   </div>
                 </div>
-              </div>
-              
-              {item.description && (
-                <p style={{ 
-                  margin: '8px 0', 
-                  color: '#666', 
-                  fontStyle: 'italic' 
-                }}>
-                  {item.description}
-                </p>
-              )}
 
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                marginTop: '12px',
-                fontSize: '0.9em'
-              }}>
-                <span style={{ color: '#666' }}>
-                  ⏱️ {item.preparation_time} min
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {item.is_available ? (
-                    <span style={{ color: '#00b894', fontWeight: 'bold' }}>✅ Disponibile</span>
-                  ) : (
-                    <span style={{ color: '#d63031', fontWeight: 'bold' }}>❌ Non Disponibile</span>
-                  )}
+                {item.description && (
+                  <p className="text-muted" style={{ fontStyle: 'italic' }}>
+                    {item.description}
+                  </p>
+                )}
+
+                <div className="menu-display__meta">
+                  <span>⏱️ {item.preparation_time} min</span>
+                  <span className={item.is_available ? 'chip-positive' : 'overdue'}>
+                    {item.is_available ? '✅ Disponibile' : '❌ Non Disponibile'}
+                  </span>
                 </div>
-              </div>
 
-              {/* Allergens */}
-              {item.allergens && item.allergens.length > 0 && (
-                <div style={{ marginTop: '8px' }}>
-                  <small style={{ color: '#e17000', fontWeight: 'bold' }}>
+                {item.allergens && item.allergens.length > 0 && (
+                  <div className="glass-chip" style={{ alignSelf: 'flex-start' }}>
                     ⚠️ Allergeni: {item.allergens.join(', ')}
-                  </small>
+                  </div>
+                )}
+
+                {item.nutritional_info && (
+                  <div className="text-muted" style={{ fontSize: '0.85rem' }}>
+                    {item.nutritional_info.calories && (
+                      <span>🔥 {item.nutritional_info.calories} kcal</span>
+                    )}
+                    {item.nutritional_info.protein && (
+                      <span style={{ marginLeft: '12px' }}>💪 Proteine: {item.nutritional_info.protein}g</span>
+                    )}
+                  </div>
+                )}
+
+                <div className="text-muted" style={{ fontSize: '0.8rem' }}>
+                  <strong>📝 Nota:</strong> La gestione degli ingredienti avviene ora manualmente. 
+                  Questa vista mostra i dati principali del menu; eventuali dettagli aggiuntivi possono essere gestiti tramite strumenti dedicati.
                 </div>
-              )}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
-              {/* Nutritional Info */}
-              {item.nutritional_info && (
-                <div style={{ marginTop: '8px', fontSize: '0.8em', color: '#666' }}>
-                  {item.nutritional_info.calories && (
-                    <span>🔥 {item.nutritional_info.calories} kcal</span>
-                  )}
-                  {item.nutritional_info.protein && (
-                    <span style={{ marginLeft: '12px' }}>💪 Proteine: {item.nutritional_info.protein}g</span>
-                  )}
-                </div>
-              )}
-
-              {/* Note per la connessione agli ingredienti */}
-              <div style={{ 
-                marginTop: '12px', 
-                padding: '8px', 
-                backgroundColor: '#f0f8ff', 
-                borderRadius: '4px',
-                fontSize: '0.8em',
-                color: '#666'
-              }}>
-                <strong>📝 Nota:</strong> La gestione degli ingredienti avviene ora manualmente. 
-                Questa vista mostra i dati principali del menu; eventuali dettagli aggiuntivi possono essere gestiti tramite strumenti dedicati.
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Statistics */}
-      <div style={{ 
-        marginTop: '30px', 
-        padding: '16px', 
-        backgroundColor: '#f8f9fa', 
-        borderRadius: '8px' 
-      }}>
+      <section className="menu-display__stats">
         <h3>Statistiche Menu</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#0984e3' }}>
-              {menuItems.length}
-            </div>
-            <div style={{ color: '#666' }}>Piatti Totali</div>
+        <div className="menu-display__stats-grid">
+          <div className="menu-display__stats-card">
+            <div className="menu-display__stats-value">{menuItems.length}</div>
+            <div className="menu-display__stats-label">Piatti Totali</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#00b894' }}>
-              {menuItems.filter(item => item.is_available).length}
-            </div>
-            <div style={{ color: '#666' }}>Disponibili</div>
+          <div className="menu-display__stats-card">
+            <div className="menu-display__stats-value">{menuItems.filter(item => item.is_available).length}</div>
+            <div className="menu-display__stats-label">Disponibili</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#d63031' }}>
-              {menuItems.filter(item => !item.is_available).length}
-            </div>
-            <div style={{ color: '#666' }}>Non Disponibili</div>
+          <div className="menu-display__stats-card">
+            <div className="menu-display__stats-value">{menuItems.filter(item => !item.is_available).length}</div>
+            <div className="menu-display__stats-label">Non Disponibili</div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

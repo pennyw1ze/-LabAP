@@ -9,12 +9,12 @@ export default function KitchenDisplay() {
 
   useEffect(() => {
     loadOrders();
-    
+
     let interval;
     if (autoRefresh) {
-      interval = setInterval(loadOrders, 10000); // Refresh every 10 seconds
+      interval = setInterval(loadOrders, 10000);
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
     };
@@ -34,7 +34,7 @@ export default function KitchenDisplay() {
   const handleOrderStatusUpdate = async (orderId, newStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus);
-      loadOrders(); // Refresh orders
+      loadOrders();
     } catch (error) {
       console.error('Error updating order status:', error);
       alert('Errore nell\'aggiornamento dello stato dell\'ordine');
@@ -44,53 +44,45 @@ export default function KitchenDisplay() {
   const handleItemStatusUpdate = async (orderId, itemId, newStatus) => {
     try {
       await updateOrderItemStatus(orderId, itemId, newStatus);
-      loadOrders(); // Refresh orders
+      loadOrders();
     } catch (error) {
       console.error('Error updating item status:', error);
       alert('Errore nell\'aggiornamento dello stato del piatto');
     }
   };
 
-  const getFilteredOrders = () => {
-    const now = new Date();
-    
-    switch (filterStatus) {
-      case 'active':
-        return orders.filter(order => ['confirmed', 'preparing'].includes(order.status));
-      case 'pending':
-        return orders.filter(order => order.status === 'pending');
-      case 'ready':
-        return orders.filter(order => order.status === 'ready');
-      case 'today':
-        return orders.filter(order => {
-          const orderDate = new Date(order.created_at);
-          return orderDate.toDateString() === now.toDateString();
-        });
-      default:
-        return orders;
-    }
-  };
-
   const getStatusColor = (status) => {
     const colors = {
-      'pending': '#ff9800',
-      'confirmed': '#2196f3',
-      'preparing': '#ff5722',
-      'ready': '#4caf50',
-      'delivered': '#9e9e9e',
-      'cancelled': '#f44336'
+      pending: '#ff9f0a',
+      confirmed: '#0a84ff',
+      preparing: '#ff5722',
+      ready: '#34c759',
+      delivered: '#8e8e93',
+      cancelled: '#ff453a'
     };
-    return colors[status] || '#9e9e9e';
+    return colors[status] || '#8e8e93';
+  };
+
+  const hexToRgba = (hex, alpha = 1) => {
+    const sanitized = hex.replace('#', '');
+    const value = sanitized.length === 3
+      ? sanitized.split('').map((c) => c + c).join('')
+      : sanitized;
+    const intVal = parseInt(value, 16);
+    const r = (intVal >> 16) & 255;
+    const g = (intVal >> 8) & 255;
+    const b = intVal & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
 
   const getStatusIcon = (status) => {
     const icons = {
-      'pending': '⏳',
-      'confirmed': '✅',
-      'preparing': '👨‍🍳',
-      'ready': '🔔',
-      'delivered': '📦',
-      'cancelled': '❌'
+      pending: '⏳',
+      confirmed: '✅',
+      preparing: '👨‍🍳',
+      ready: '🔔',
+      delivered: '📦',
+      cancelled: '❌'
     };
     return icons[status] || '❓';
   };
@@ -99,483 +91,262 @@ export default function KitchenDisplay() {
     const now = new Date();
     const orderTime = new Date(createdAt);
     const diffMinutes = Math.floor((now - orderTime) / (1000 * 60));
-    
+
     if (diffMinutes < 60) {
       return `${diffMinutes} min fa`;
-    } else {
-      const diffHours = Math.floor(diffMinutes / 60);
-      return `${diffHours}h ${diffMinutes % 60}min fa`;
     }
+    const diffHours = Math.floor(diffMinutes / 60);
+    return `${diffHours}h ${diffMinutes % 60}min fa`;
   };
 
-  const getPriorityLevel = (createdAt, estimatedTime) => {
+  const getPriorityLevel = (createdAt) => {
     const now = new Date();
     const orderTime = new Date(createdAt);
     const diffMinutes = Math.floor((now - orderTime) / (1000 * 60));
-    
+
     if (diffMinutes > 45) return 'urgent';
     if (diffMinutes > 30) return 'high';
     if (diffMinutes > 15) return 'medium';
     return 'normal';
   };
 
+  const getFilteredOrders = () => {
+    const now = new Date();
+
+    switch (filterStatus) {
+      case 'active':
+        return orders.filter(order => ['confirmed', 'preparing'].includes(order.status));
+      case 'pending':
+        return orders.filter(order => order.status === 'pending');
+      case 'ready':
+        return orders.filter(order => order.status === 'ready');
+      case 'today':
+        return orders.filter(order => new Date(order.created_at).toDateString() === now.toDateString());
+      default:
+        return orders;
+    }
+  };
+
   const filteredOrders = getFilteredOrders();
+
+  const filterOptions = [
+    { key: 'active', label: '🔥 Attivi', count: orders.filter(o => ['confirmed', 'preparing'].includes(o.status)).length },
+    { key: 'pending', label: '⏳ In attesa', count: orders.filter(o => o.status === 'pending').length },
+    { key: 'ready', label: '🔔 Pronti', count: orders.filter(o => o.status === 'ready').length },
+    { key: 'today', label: '📅 Oggi', count: orders.filter(o => new Date(o.created_at).toDateString() === new Date().toDateString()).length },
+    { key: 'all', label: '📦 Tutti', count: orders.length }
+  ];
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '20px' }}>
-        <div style={{ fontSize: '2em', marginBottom: '20px' }}>👨‍🍳</div>
-        <div>Caricamento ordini...</div>
+      <div className="glass-card loading-panel">
+        <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>👨‍🍳</div>
+        Caricamento ordini...
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-      {/* Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '20px',
-        padding: '20px',
-        backgroundColor: '#1a1a1a',
-        color: 'white',
-        borderRadius: '8px'
-      }}>
+    <div className="kitchen-display">
+      <section className="kitchen-display__topbar">
         <div>
-          <h1 style={{ margin: 0, fontSize: '2em' }}>👨‍🍳 CUCINA</h1>
-          <div style={{ fontSize: '1.2em', opacity: 0.8 }}>
-            {filteredOrders.length} ordini attivi
-          </div>
+          <h1 style={{ margin: 0 }}>👨‍🍳 Cucina</h1>
+          <span className="text-muted">{filteredOrders.length} ordini in vista</span>
         </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ fontSize: '1.5em' }}>
+        <div className="kitchen-display__actions">
+          <span className="app-clock">
             🕐 {new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-          </div>
-          
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          </span>
+          <label className="availability-toggle">
             <input
               type="checkbox"
               checked={autoRefresh}
               onChange={(e) => setAutoRefresh(e.target.checked)}
             />
-            Auto-refresh
+            <span className="availability-toggle__slider" aria-hidden="true" />
+            <span className="availability-toggle__label">Auto-refresh</span>
           </label>
+          <button type="button" className="button-glass button-glass--primary" onClick={loadOrders}>
+            🔄 Aggiorna
+          </button>
         </div>
-      </div>
+      </section>
 
-      {/* Filter Buttons */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '10px', 
-        marginBottom: '20px',
-        flexWrap: 'wrap'
-      }}>
-        {[
-          { key: 'active', label: '🔥 Attivi', count: orders.filter(o => ['confirmed', 'preparing'].includes(o.status)).length },
-          { key: 'pending', label: '⏳ In attesa', count: orders.filter(o => o.status === 'pending').length },
-          { key: 'ready', label: '🔔 Pronti', count: orders.filter(o => o.status === 'ready').length },
-          { key: 'today', label: '📅 Oggi', count: orders.filter(o => new Date(o.created_at).toDateString() === new Date().toDateString()).length }
-        ].map(filter => (
+      <div className="kitchen-display__filters">
+        {filterOptions.map(option => (
           <button
-            key={filter.key}
-            onClick={() => setFilterStatus(filter.key)}
-            style={{
-              backgroundColor: filterStatus === filter.key ? '#0984e3' : '#f0f0f0',
-              color: filterStatus === filter.key ? 'white' : 'black',
-              border: 'none',
-              padding: '10px 15px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}
+            key={option.key}
+            type="button"
+            className={`button-glass ${filterStatus === option.key ? 'button-glass--primary' : ''}`}
+            onClick={() => setFilterStatus(option.key)}
           >
-            {filter.label} ({filter.count})
+            {option.label} ({option.count})
           </button>
         ))}
       </div>
 
-      {/* Orders Grid */}
       {filteredOrders.length === 0 ? (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '60px', 
-          backgroundColor: '#f8f9fa', 
-          borderRadius: '8px',
-          color: '#666'
-        }}>
-          <div style={{ fontSize: '3em', marginBottom: '20px' }}>🎉</div>
+        <div className="empty-state">
+          <span style={{ fontSize: '2.5rem' }}>🎉</span>
           <h3>Nessun ordine {filterStatus === 'active' ? 'attivo' : 'trovato'}</h3>
-          <p>
-            {filterStatus === 'active' ? 
-              'Tutti gli ordini sono stati completati!' : 
-              'Cambia il filtro per vedere altri ordini'
-            }
+          <p className="text-muted">
+            {filterStatus === 'active'
+              ? 'La cucina è libera per il momento.'
+              : 'Modifica il filtro per visualizzare altri ordini.'}
           </p>
         </div>
       ) : (
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
-          gap: '20px' 
-        }}>
+        <div className="kitchen-display__grid">
           {filteredOrders.map((order) => {
-            const priority = getPriorityLevel(order.created_at, order.estimated_completion_time);
-            const priorityColors = {
-              'urgent': '#f44336',
-              'high': '#ff9800',
-              'medium': '#ffeb3b',
-              'normal': '#4caf50'
+            const accent = getStatusColor(order.status);
+            const priority = getPriorityLevel(order.created_at);
+            const cardStyle = {
+              borderColor: hexToRgba(accent, 0.45),
+              boxShadow: `0 24px 38px -28px ${hexToRgba(accent, 0.55)}`
+            };
+            const headerStyle = {
+              background: `linear-gradient(135deg, ${hexToRgba(accent, 0.68)}, ${hexToRgba(accent, 0.38)})`
             };
 
             return (
-              <div 
-                key={order.id} 
-                style={{ 
-                  border: `3px solid ${priorityColors[priority]}`,
-                  borderRadius: '8px', 
-                  backgroundColor: 'white',
-                  boxShadow: priority === 'urgent' ? '0 4px 8px rgba(244, 67, 54, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)'
-                }}
-              >
-                {/* Order Header */}
-                <div style={{ 
-                  backgroundColor: getStatusColor(order.status),
-                  color: 'white',
-                  padding: '15px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
+              <article key={order.id} className="kitchen-display__card" style={cardStyle}>
+                <header className="kitchen-display__card-header" style={headerStyle}>
                   <div>
-                    <div style={{ fontSize: '1.3em', fontWeight: 'bold' }}>
+                    <div style={{ fontSize: '1.35rem', fontWeight: 700 }}>
                       {getStatusIcon(order.status)} {order.order_number}
                     </div>
-                    <div style={{ fontSize: '0.9em', opacity: 0.9 }}>
+                    <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>
                       Tavolo {order.table_number} • {getTimeSinceOrder(order.created_at)}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.1em', fontWeight: 'bold' }}>
-                      €{order.final_amount}
-                    </div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>€{order.final_amount}</div>
                     {order.customer_name && (
-                      <div style={{ fontSize: '0.8em', opacity: 0.9 }}>
-                        {order.customer_name}
-                      </div>
+                      <div style={{ fontSize: '0.85rem', opacity: 0.85 }}>{order.customer_name}</div>
                     )}
                   </div>
-                </div>
+                </header>
 
-                {/* Priority Badge */}
-                {priority === 'urgent' && (
-                  <div style={{
-                    backgroundColor: '#f44336',
-                    color: 'white',
-                    textAlign: 'center',
-                    padding: '8px',
-                    fontWeight: 'bold',
-                    animation: 'blink 2s infinite'
-                  }}>
-                    🚨 URGENTE - Oltre 45 minuti! 🚨
+                <div className="kitchen-display__card-body">
+                  <div className={`priority-chip priority-chip--${priority}`}>
+                    {priority === 'urgent' && '🚨'}
+                    {priority === 'high' && '⚠️'}
+                    {priority === 'medium' && '⏱️'}
+                    {priority === 'normal' && '🧊'}
+                    Priorità: {priority}
                   </div>
-                )}
 
-                {/* Order Items */}
-                <div style={{ padding: '15px' }}>
-                  <div style={{ marginBottom: '15px' }}>
-                    <strong>Piatti ({order.items.length}):</strong>
+                  <div className="kitchen-display__meta">
+                    <span className="text-muted">Creato alle {new Date(order.created_at).toLocaleTimeString('it-IT')}</span>
+                    {order.estimated_completion_time && (
+                      <span className="text-muted">Stima: {order.estimated_completion_time} min</span>
+                    )}
                   </div>
-                  
-                  {order.items.map((item, index) => (
-                    <div key={index} style={{ 
-                      backgroundColor: '#f8f9fa',
-                      padding: '12px',
-                      borderRadius: '6px',
-                      marginBottom: '8px',
-                      border: `2px solid ${getStatusColor(item.status)}`
-                    }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        marginBottom: '8px'
-                      }}>
-                        <div style={{ fontWeight: 'bold', fontSize: '1.1em' }}>
-                          {item.quantity}x {item.menu_item_name}
+
+                  <div className="kitchen-display__items">
+                    {order.items.map((item) => (
+                      <div key={item.id} className="kitchen-display__item">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                          <div>
+                            <strong>{item.quantity}× {item.menu_item_name}</strong>
+                            {item.special_instructions && (
+                              <div className="text-muted" style={{ fontSize: '0.8rem' }}>📝 {item.special_instructions}</div>
+                            )}
+                          </div>
+                          <span className="status-badge" style={{ color: getStatusColor(item.status) }}>
+                            {item.status.toUpperCase()}
+                          </span>
                         </div>
-                        <div style={{ 
-                          backgroundColor: getStatusColor(item.status),
-                          color: 'white',
-                          padding: '4px 8px',
-                          borderRadius: '12px',
-                          fontSize: '0.8em',
-                          fontWeight: 'bold'
-                        }}>
-                          {getStatusIcon(item.status)} {item.status.toUpperCase()}
+
+                        <div className="kitchen-display__item-actions">
+                          {item.status === 'pending' && (
+                            <button
+                              type="button"
+                              className="control-button control-button--warning"
+                              onClick={() => handleItemStatusUpdate(order.id, item.id, 'preparing')}
+                            >
+                              👨‍🍳 Prepara
+                            </button>
+                          )}
+
+                          {item.status === 'preparing' && (
+                            <button
+                              type="button"
+                              className="control-button control-button--success"
+                              onClick={() => handleItemStatusUpdate(order.id, item.id, 'ready')}
+                            >
+                              ✅ Pronto
+                            </button>
+                          )}
+
+                          {item.status !== 'cancelled' && item.status !== 'served' && (
+                            <button
+                              type="button"
+                              className="control-button control-button--danger"
+                              onClick={() => handleItemStatusUpdate(order.id, item.id, 'cancelled')}
+                            >
+                              ❌ Annulla
+                            </button>
+                          )}
                         </div>
                       </div>
+                    ))}
+                  </div>
 
-                      {item.special_instructions && (
-                        <div style={{ 
-                          backgroundColor: '#fff3cd',
-                          border: '1px solid #ffeaa7',
-                          padding: '8px',
-                          borderRadius: '4px',
-                          marginBottom: '8px',
-                          fontSize: '0.9em'
-                        }}>
-                          <strong>📝 Note:</strong> {item.special_instructions}
-                        </div>
-                      )}
-
-                      {/* Item Action Buttons */}
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        {item.status === 'pending' && (
-                          <button
-                            onClick={() => handleItemStatusUpdate(order.id, item.id, 'preparing')}
-                            style={{
-                              backgroundColor: '#ff5722',
-                              color: 'white',
-                              border: 'none',
-                              padding: '6px 10px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '0.8em',
-                              fontWeight: 'bold'
-                            }}
-                          >
-                            👨‍🍳 Inizia Preparazione
-                          </button>
-                        )}
-                        
-                        {item.status === 'preparing' && (
-                          <button
-                            onClick={() => handleItemStatusUpdate(order.id, item.id, 'ready')}
-                            style={{
-                              backgroundColor: '#4caf50',
-                              color: 'white',
-                              border: 'none',
-                              padding: '6px 10px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '0.8em',
-                              fontWeight: 'bold'
-                            }}
-                          >
-                            ✅ Pronto
-                          </button>
-                        )}
-
-                        {item.status !== 'cancelled' && item.status !== 'served' && (
-                          <button
-                            onClick={() => handleItemStatusUpdate(order.id, item.id, 'cancelled')}
-                            style={{
-                              backgroundColor: '#f44336',
-                              color: 'white',
-                              border: 'none',
-                              padding: '6px 10px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '0.8em'
-                            }}
-                          >
-                            ❌ Annulla
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Order Notes */}
                   {order.special_instructions && (
-                    <div style={{ 
-                      backgroundColor: '#e3f2fd',
-                      border: '1px solid #2196f3',
-                      padding: '10px',
-                      borderRadius: '4px',
-                      marginTop: '10px'
-                    }}>
-                      <strong>📋 Note Ordine:</strong>
-                      <div style={{ marginTop: '4px' }}>{order.special_instructions}</div>
+                    <div className="active-orders__notes">
+                      <strong>📋 Note Ordine</strong>
+                      <span className="text-muted">{order.special_instructions}</span>
                     </div>
                   )}
                 </div>
 
-                {/* Order Actions */}
-                <div style={{ 
-                  padding: '15px',
-                  borderTop: '1px solid #eee',
-                  display: 'flex',
-                  gap: '8px',
-                  flexWrap: 'wrap'
-                }}>
-                  {order.status === 'pending' && (
-                    <button
-                      onClick={() => handleOrderStatusUpdate(order.id, 'confirmed')}
-                      style={{
-                        backgroundColor: '#2196f3',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 15px',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        flex: 1
-                      }}
-                    >
-                      ✅ Conferma Ordine
-                    </button>
-                  )}
-
-                  {order.status === 'confirmed' && (
-                    <button
-                      onClick={() => handleOrderStatusUpdate(order.id, 'preparing')}
-                      style={{
-                        backgroundColor: '#ff5722',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 15px',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        flex: 1
-                      }}
-                    >
-                      👨‍🍳 Inizia Preparazione
-                    </button>
-                  )}
-
-                  {order.status === 'preparing' && (
-                    <button
-                      onClick={() => handleOrderStatusUpdate(order.id, 'ready')}
-                      style={{
-                        backgroundColor: '#4caf50',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 15px',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        flex: 1
-                      }}
-                    >
-                      🔔 Ordine Pronto
-                    </button>
-                  )}
-
-                  {order.status === 'ready' && (
-                    <button
-                      onClick={() => handleOrderStatusUpdate(order.id, 'delivered')}
-                      style={{
-                        backgroundColor: '#9e9e9e',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 15px',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        flex: 1
-                      }}
-                    >
-                      📦 Consegnato
-                    </button>
-                  )}
-
-                  {['pending', 'confirmed'].includes(order.status) && (
-                    <button
-                      onClick={() => handleOrderStatusUpdate(order.id, 'cancelled')}
-                      style={{
-                        backgroundColor: '#f44336',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 15px',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        minWidth: '100px'
-                      }}
-                    >
-                      ❌ Annulla
-                    </button>
-                  )}
-                </div>
-
-                {/* Order Timing Info */}
-                <div style={{ 
-                  backgroundColor: '#f0f0f0',
-                  padding: '10px 15px',
-                  fontSize: '0.8em',
-                  color: '#666',
-                  display: 'flex',
-                  justifyContent: 'space-between'
-                }}>
-                  <span>Ordinato: {new Date(order.created_at).toLocaleTimeString('it-IT')}</span>
-                  {order.estimated_completion_time && (
-                    <span>Stimato: {new Date(order.estimated_completion_time).toLocaleTimeString('it-IT')}</span>
-                  )}
-                </div>
-              </div>
+                <footer className="kitchen-display__footer">
+                  <div className="text-muted">Stato corrente: {order.status.toUpperCase()}</div>
+                  <div className="kitchen-display__item-actions">
+                    {order.status === 'pending' && (
+                      <button
+                        type="button"
+                        className="button-glass button-glass--primary"
+                        onClick={() => handleOrderStatusUpdate(order.id, 'confirmed')}
+                      >
+                        ✅ Conferma Ordine
+                      </button>
+                    )}
+                    {order.status === 'confirmed' && (
+                      <button
+                        type="button"
+                        className="button-glass button-glass--warning"
+                        onClick={() => handleOrderStatusUpdate(order.id, 'preparing')}
+                      >
+                        👨‍🍳 Inizia Preparazione
+                      </button>
+                    )}
+                    {order.status === 'preparing' && (
+                      <button
+                        type="button"
+                        className="button-glass button-glass--success"
+                        onClick={() => handleOrderStatusUpdate(order.id, 'ready')}
+                      >
+                        🔔 Ordine Pronto
+                      </button>
+                    )}
+                    {order.status === 'ready' && (
+                      <button
+                        type="button"
+                        className="button-glass"
+                        onClick={() => handleOrderStatusUpdate(order.id, 'delivered')}
+                      >
+                        📦 Consegnato
+                      </button>
+                    )}
+                  </div>
+                </footer>
+              </article>
             );
           })}
         </div>
       )}
-
-      {/* Statistics Panel */}
-      <div style={{ 
-        marginTop: '30px',
-        padding: '20px',
-        backgroundColor: '#f8f9fa',
-        borderRadius: '8px'
-      }}>
-        <h3>📊 Statistiche Cucina</h3>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
-          gap: '16px',
-          textAlign: 'center'
-        }}>
-          <div>
-            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#ff9800' }}>
-              {orders.filter(o => o.status === 'pending').length}
-            </div>
-            <div style={{ color: '#666' }}>In Attesa</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#ff5722' }}>
-              {orders.filter(o => o.status === 'preparing').length}
-            </div>
-            <div style={{ color: '#666' }}>In Preparazione</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#4caf50' }}>
-              {orders.filter(o => o.status === 'ready').length}
-            </div>
-            <div style={{ color: '#666' }}>Pronti</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#2196f3' }}>
-              {orders.filter(o => ['confirmed', 'preparing'].includes(o.status)).length}
-            </div>
-            <div style={{ color: '#666' }}>Attivi</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#9e9e9e' }}>
-              {orders.filter(o => new Date(o.created_at).toDateString() === new Date().toDateString()).length}
-            </div>
-            <div style={{ color: '#666' }}>Oggi</div>
-          </div>
-        </div>
-      </div>
-
-      {/* CSS for blinking animation */}
-      <style jsx>{`
-        @keyframes blink {
-          0%, 50% { opacity: 1; }
-          51%, 100% { opacity: 0.5; }
-        }
-      `}</style>
     </div>
   );
 }

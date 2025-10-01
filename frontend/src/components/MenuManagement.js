@@ -171,291 +171,251 @@ export default function MenuManagement() {
     }
   };
 
+  const renderNutritionalFields = () => (
+    <div className="menu-management__form-grid">
+      {['calories', 'protein', 'carbs', 'fat'].map((field) => (
+        <div key={field} className="form-field">
+          <label className="form-label" htmlFor={`nutritional-${field}`}>
+            {field === 'calories' ? 'Calorie (kcal)' : `${field.charAt(0).toUpperCase()}${field.slice(1)} (g)`}
+          </label>
+          <input
+            id={`nutritional-${field}`}
+            type="number"
+            className="input-glass"
+            name={`nutritional_info.${field}`}
+            value={formData.nutritional_info[field]}
+            onChange={handleInputChange}
+            min="0"
+          />
+        </div>
+      ))}
+    </div>
+  );
+
   if (loading) {
-    return <div>Caricamento...</div>;
+    return <div className="glass-card loading-panel">Caricamento dati menu...</div>;
   }
 
   return (
-    <div>
-      <h2>Gestione Menu</h2>
-
-      <div style={{ marginBottom: '20px' }}>
-        <button 
-          onClick={() => {
-            if (showAddForm) {
-              resetForm();
-            } else {
-              setEditingItem(null);
-              setFormData(getInitialFormState());
-              setShowAddForm(true);
-            }
-          }}
-          style={{
-            backgroundColor: '#00b894',
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          {showAddForm ? (editingItem ? 'Annulla Modifica' : 'Annulla') : 'Aggiungi Piatto'}
-        </button>
-      </div>
-
-      {/* Add Menu Item Form */}
-      {showAddForm && (
-        <form onSubmit={handleSubmit} style={{ 
-          backgroundColor: '#f8f9fa', 
-          padding: '20px', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
-        }}>
-          <h3>{editingItem ? `Modifica: ${editingItem.name}` : 'Nuovo Piatto'}</h3>
-          
-          {/* Basic Info */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '15px' }}>
-            <input
-              type="text"
-              name="name"
-              placeholder="Nome del piatto"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-            />
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="appetizer">Antipasto</option>
-              <option value="main">Primo Piatto</option>
-              <option value="dessert">Dolce</option>
-              <option value="beverage">Bevanda</option>
-              <option value="side">Contorno</option>
-            </select>
-            <input
-              type="number"
-              name="price"
-              placeholder="Prezzo (€)"
-              value={formData.price}
-              onChange={handleInputChange}
-              min="0"
-              step="0.01"
-              required
-            />
-            <input
-              type="number"
-              name="preparation_time"
-              placeholder="Tempo preparazione (min)"
-              value={formData.preparation_time}
-              onChange={handleInputChange}
-              min="1"
-              required
-            />
-          </div>
-
-          <textarea
-            name="description"
-            placeholder="Descrizione del piatto"
-            value={formData.description}
-            onChange={handleInputChange}
-            style={{ width: '100%', marginBottom: '15px', minHeight: '60px' }}
-          />
-
-          <input
-            type="text"
-            name="allergens"
-            placeholder="Allergeni (separati da virgola)"
-            value={formData.allergens}
-            onChange={handleInputChange}
-            style={{ width: '100%', marginBottom: '15px' }}
-          />
-
-          {/* Nutritional Info */}
-          <h4>Informazioni Nutrizionali (opzionali)</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '15px' }}>
-            <input
-              type="number"
-              name="nutritional_info.calories"
-              placeholder="Calorie"
-              value={formData.nutritional_info.calories}
-              onChange={handleInputChange}
-              min="0"
-            />
-            <input
-              type="number"
-              name="nutritional_info.protein"
-              placeholder="Proteine (g)"
-              value={formData.nutritional_info.protein}
-              onChange={handleInputChange}
-              min="0"
-              step="0.1"
-            />
-            <input
-              type="number"
-              name="nutritional_info.carbs"
-              placeholder="Carboidrati (g)"
-              value={formData.nutritional_info.carbs}
-              onChange={handleInputChange}
-              min="0"
-              step="0.1"
-            />
-            <input
-              type="number"
-              name="nutritional_info.fat"
-              placeholder="Grassi (g)"
-              value={formData.nutritional_info.fat}
-              onChange={handleInputChange}
-              min="0"
-              step="0.1"
-            />
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <AvailabilityToggle
-              id={editingItem ? `menu-availability-${editingItem.id}` : 'menu-availability-new'}
-              checked={formData.is_available}
-              onChange={handleInputChange}
-              labelOn="Disponibile per gli ordini"
-              labelOff="Non disponibile"
-            />
-          </div>
-
-          {/* Ingredient Selection Note */}
-          <div style={{ 
-            backgroundColor: '#e3f2fd', 
-            padding: '10px', 
-            borderRadius: '4px', 
-            marginBottom: '15px',
-            fontSize: '0.9em'
-          }}>
-            <strong>📝 Nota:</strong> Imposta la disponibilità del piatto con l'interruttore qui sopra.
-            La gestione dettagliata degli ingredienti può essere effettuata separatamente tramite API dedicate.
-          </div>
-
+    <div className="menu-management">
+      <section className="menu-management__panel">
+        <div className="menu-management__header">
           <div>
-            <button type="submit" style={{
-              backgroundColor: '#0984e3',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginRight: '10px'
-            }}>
-              {editingItem ? 'Salva Modifiche' : 'Salva Piatto'}
+            <h2>🛠️ Gestione Menu</h2>
+            <span className="text-muted">Modifica, aggiorna e mantieni il menu con uno stile trasparente.</span>
+          </div>
+          <div className="menu-management__filters">
+            <button
+              type="button"
+              className="button-glass button-glass--primary"
+              onClick={() => {
+                setShowAddForm(true);
+                setEditingItem(null);
+                setFormData(getInitialFormState());
+              }}
+            >
+              ➕ Nuovo Piatto
             </button>
-            <button type="button" onClick={resetForm} style={{
-              backgroundColor: '#636e72',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}>
+            <button type="button" className="button-glass" onClick={loadData}>
+              🔄 Aggiorna
+            </button>
+          </div>
+        </div>
+
+        <div className="menu-management__items">
+          {menuItems.length === 0 ? (
+            <div className="empty-state">Nessun piatto presente. Aggiungi il primo elemento per iniziare.</div>
+          ) : (
+            menuItems.map((item) => (
+              <article key={item.id} className="menu-management__item">
+                <div className="menu-management__item-header">
+                  <div>
+                    <h3>{item.name}</h3>
+                    {item.description && <p className="text-muted">{item.description}</p>}
+                  </div>
+                  <div className="menu-display__price">
+                    <div>€{item.price}</div>
+                    <small className="text-muted">{item.category}</small>
+                  </div>
+                </div>
+
+                <div className="menu-management__item-meta">
+                  <span>⏱️ {item.preparation_time} min</span>
+                  {item.allergens && item.allergens.length > 0 && (
+                    <span className="glass-chip">⚠️ Allergeni: {item.allergens.join(', ')}</span>
+                  )}
+                  <AvailabilityToggle
+                    id={`availability-${item.id}`}
+                    checked={Boolean(item.is_available)}
+                    labelOn="Disponibile"
+                    labelOff="Non disp."
+                    onChange={() => handleToggleAvailability(item)}
+                  />
+                </div>
+
+                {item.nutritional_info && (
+                  <div className="text-muted" style={{ fontSize: '0.8rem' }}>
+                    {item.nutritional_info.calories && <span>🔥 {item.nutritional_info.calories} kcal</span>}
+                    {item.nutritional_info.protein && <span style={{ marginLeft: '12px' }}>💪 {item.nutritional_info.protein} g proteine</span>}
+                    {item.nutritional_info.carbs && <span style={{ marginLeft: '12px' }}>🌾 {item.nutritional_info.carbs} g carboidrati</span>}
+                    {item.nutritional_info.fat && <span style={{ marginLeft: '12px' }}>🥑 {item.nutritional_info.fat} g grassi</span>}
+                  </div>
+                )}
+
+                <div className="menu-management__item-actions">
+                  <button
+                    type="button"
+                    className="button-glass"
+                    onClick={() => handleEdit(item)}
+                  >
+                    ✏️ Modifica
+                  </button>
+                  <button
+                    type="button"
+                    className="button-glass button-glass--danger"
+                    onClick={() => handleDelete(item)}
+                  >
+                    🗑️ Elimina
+                  </button>
+                  <button
+                    type="button"
+                    className={`button-glass ${item.is_available ? 'button-glass--danger' : 'button-glass--success'}`}
+                    onClick={() => handleToggleAvailability(item)}
+                  >
+                    {item.is_available ? 'Sospendi' : 'Rendi disponibile'}
+                  </button>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
+      <aside className="menu-management__panel">
+        <div className="menu-management__header">
+          <div>
+            <h3>{editingItem ? '✏️ Modifica Piatto' : '➕ Nuovo Piatto'}</h3>
+            <span className="text-muted">
+              {editingItem ? 'Aggiorna le informazioni del piatto selezionato.' : 'Compila il modulo per aggiungere un nuovo piatto al menu.'}
+            </span>
+          </div>
+          {(showAddForm || editingItem) && (
+            <button type="button" className="button-glass" onClick={resetForm}>
               Annulla
             </button>
-          </div>
-        </form>
-      )}
+          )}
+        </div>
 
-      {/* Current Menu Items */}
-      <div>
-        <h3>Piatti Attuali ({menuItems.length})</h3>
-        {menuItems.length === 0 ? (
-          <p>Nessun piatto nel menu. Inizia aggiungendone uno!</p>
+        {showAddForm || editingItem ? (
+          <form className="menu-management__form" onSubmit={handleSubmit}>
+            <div className="form-field">
+              <label className="form-label" htmlFor="name">Nome</label>
+              <input
+                id="name"
+                name="name"
+                className="input-glass"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-field">
+              <label className="form-label" htmlFor="description">Descrizione</label>
+              <textarea
+                id="description"
+                name="description"
+                className="textarea-glass menu-management__textarea"
+                value={formData.description}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="menu-management__form-grid">
+              <div className="form-field">
+                <label className="form-label" htmlFor="price">Prezzo (€)</label>
+                <input
+                  id="price"
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="input-glass"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label className="form-label" htmlFor="category">Categoria</label>
+                <select
+                  id="category"
+                  name="category"
+                  className="select-glass"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                >
+                  <option value="appetizer">Antipasto</option>
+                  <option value="main">Piatto Principale</option>
+                  <option value="dessert">Dessert</option>
+                  <option value="beverage">Bevanda</option>
+                  <option value="side">Contorno</option>
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label className="form-label" htmlFor="preparation_time">Preparazione (min)</label>
+                <input
+                  id="preparation_time"
+                  name="preparation_time"
+                  type="number"
+                  min="1"
+                  className="input-glass"
+                  value={formData.preparation_time}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="form-field">
+                <label className="form-label" htmlFor="allergens">Allergeni (comma separated)</label>
+                <input
+                  id="allergens"
+                  name="allergens"
+                  className="input-glass"
+                  value={formData.allergens}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+
+            <div>
+              <strong className="text-muted">Disponibilità</strong>
+              <AvailabilityToggle
+                id="form-availability"
+                checked={formData.is_available}
+                onChange={(e) => setFormData(prev => ({ ...prev, is_available: e.target.checked }))}
+              />
+            </div>
+
+            <div>
+              <strong className="text-muted">Informazioni Nutrizionali</strong>
+              {renderNutritionalFields()}
+            </div>
+
+            <button
+              type="submit"
+              className="button-glass button-glass--success menu-management__submit"
+            >
+              {editingItem ? '💾 Aggiorna Piatto' : '🚀 Aggiungi al Menu'}
+            </button>
+          </form>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#ddd' }}>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Nome</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Categoria</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Prezzo</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Tempo Prep.</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Disponibilità</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Allergeni</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Azioni</th>
-                </tr>
-              </thead>
-              <tbody>
-                {menuItems.map(item => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '8px' }}>
-                      <strong>{item.name}</strong>
-                      {item.description && (
-                        <div style={{ fontSize: '0.8em', color: '#666', marginTop: '4px' }}>
-                          {item.description}
-                        </div>
-                      )}
-                    </td>
-                    <td style={{ padding: '8px', textTransform: 'capitalize' }}>
-                      {item.category}
-                    </td>
-                    <td style={{ padding: '8px', fontWeight: 'bold' }}>
-                      €{item.price}
-                    </td>
-                    <td style={{ padding: '8px' }}>
-                      {item.preparation_time} min
-                    </td>
-                    <td style={{ padding: '8px' }}>
-                      <AvailabilityToggle
-                        id={`availability-${item.id}`}
-                        checked={item.is_available}
-                        onChange={() => handleToggleAvailability(item)}
-                        labelOn="Disponibile"
-                        labelOff="Non disponibile"
-                      />
-                    </td>
-                    <td style={{ padding: '8px' }}>
-                      {item.allergens && item.allergens.length > 0 ? (
-                        <span style={{ fontSize: '0.8em', color: '#e17000' }}>
-                          {item.allergens.join(', ')}
-                        </span>
-                      ) : (
-                        <span style={{ color: '#666' }}>Nessuno</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '8px' }}>
-                      <button
-                        onClick={() => handleEdit(item)}
-                        style={{
-                          backgroundColor: '#0984e3',
-                          color: 'white',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.8em',
-                          marginRight: '8px'
-                        }}
-                      >
-                        Modifica
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item)}
-                        style={{
-                          backgroundColor: '#d63031',
-                          color: 'white',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.8em'
-                        }}
-                      >
-                        Elimina
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="empty-state">
+            Seleziona un piatto da modificare oppure crea un nuovo piatto per iniziare.
           </div>
         )}
-      </div>
+      </aside>
     </div>
   );
 }

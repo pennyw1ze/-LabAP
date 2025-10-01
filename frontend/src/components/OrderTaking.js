@@ -34,19 +34,19 @@ export default function OrderTaking() {
 
   const addItemToOrder = (menuItem) => {
     const existingItemIndex = currentOrder.items.findIndex(item => item.menu_item_id === menuItem.id);
-    
+
     if (existingItemIndex >= 0) {
-      // Increase quantity if item already exists
       const updatedItems = [...currentOrder.items];
-      updatedItems[existingItemIndex].quantity += 1;
-      updatedItems[existingItemIndex].total_price = updatedItems[existingItemIndex].quantity * menuItem.price;
-      
+      const updatedItem = { ...updatedItems[existingItemIndex] };
+      updatedItem.quantity += 1;
+      updatedItem.total_price = updatedItem.quantity * menuItem.price;
+      updatedItems[existingItemIndex] = updatedItem;
+
       setCurrentOrder(prev => ({
         ...prev,
         items: updatedItems
       }));
     } else {
-      // Add new item
       const newItem = {
         menu_item_id: menuItem.id,
         menu_item_name: menuItem.name,
@@ -55,7 +55,7 @@ export default function OrderTaking() {
         total_price: menuItem.price,
         special_instructions: ''
       };
-      
+
       setCurrentOrder(prev => ({
         ...prev,
         items: [...prev.items, newItem]
@@ -130,11 +130,8 @@ export default function OrderTaking() {
       };
 
       const result = await createOrder(orderData);
-      
-      // Add to order history
+
       setOrderHistory(prev => [result, ...prev]);
-      
-      // Reset current order
       setCurrentOrder({
         table_number: '',
         customer_name: '',
@@ -144,10 +141,7 @@ export default function OrderTaking() {
       });
 
       alert(`Ordine ${result.order_number} inviato con successo alla cucina!`);
-      
-      // Aggiorna il menu per riflettere eventuali variazioni di disponibilità manuale
       loadMenuData();
-      
     } catch (error) {
       console.error('Error creating order:', error);
       alert('Errore nella creazione dell\'ordine: ' + (error.response?.data?.message || error.message));
@@ -166,37 +160,31 @@ export default function OrderTaking() {
     side: 'Contorni'
   };
 
-  const filteredMenuItems = selectedCategory === 'all' 
-    ? menuItems 
+  const filteredMenuItems = selectedCategory === 'all'
+    ? menuItems
     : menuItems.filter(item => item.category === selectedCategory);
 
   if (loading) {
-    return <div>Caricamento menu...</div>;
+    return <div className="glass-card loading-panel">Caricamento menu...</div>;
   }
 
   return (
-    <div style={{ display: 'flex', gap: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Menu Selection - Left Side */}
-      <div style={{ flex: '2', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px' }}>
-        <h2>📋 Presa Ordini</h2>
+    <div className="order-taking">
+      <section className="order-taking__menu glass-card">
+        <div className="order-taking__header">
+          <h2>📋 Presa Ordini</h2>
+          <span className="text-muted">Seleziona i piatti e compila l'ordine in un ambiente fluido.</span>
+        </div>
 
-        {/* Category Filter */}
-        <div style={{ marginBottom: '20px' }}>
-          <h3>Categorie:</h3>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div className="form-section">
+          <h3>Categorie</h3>
+          <div className="order-taking__category-buttons">
             {categories.map(category => (
               <button
                 key={category}
+                type="button"
+                className={`button-glass order-taking__category-button ${selectedCategory === category ? 'button-glass--primary' : ''}`}
                 onClick={() => setSelectedCategory(category)}
-                style={{
-                  backgroundColor: selectedCategory === category ? '#0984e3' : '#ddd',
-                  color: selectedCategory === category ? 'white' : 'black',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.9em'
-                }}
               >
                 {categoryLabels[category]}
               </button>
@@ -204,112 +192,92 @@ export default function OrderTaking() {
           </div>
         </div>
 
-        {/* Menu Items Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px', maxHeight: '600px', overflowY: 'auto' }}>
-          {filteredMenuItems.map((item) => (
-              <div 
-                key={item.id} 
-                style={{ 
-                  border: '1px solid #ddd', 
-                  borderRadius: '6px', 
-                  padding: '12px',
-                  backgroundColor: 'white',
-                  cursor: 'pointer'
-                }}
-                onClick={() => addItemToOrder(item)}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                  <h4 style={{ margin: 0, fontSize: '1em', color: 'black' }}>
-                    {item.name}
-                  </h4>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.1em', fontWeight: 'bold', color: '#0984e3' }}>
-                      €{item.price}
-                    </div>
-                    <div style={{ fontSize: '0.7em', color: '#666' }}>
-                      {item.preparation_time} min
-                    </div>
-                  </div>
-                </div>
-                
-                {item.description && (
-                  <p style={{ margin: '4px 0', fontSize: '0.8em', color: '#666' }}>
-                    {item.description}
-                  </p>
-                )}
+        <div className="order-taking__grid">
+          {filteredMenuItems.length === 0 && (
+            <div className="empty-state">
+              Nessun piatto nella categoria {categoryLabels[selectedCategory]}.
+            </div>
+          )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8em' }}>
-                  <span style={{ 
-                    color: '#4caf50',
-                    fontWeight: 'bold'
-                  }}>
-                    ✅ Disponibile
-                  </span>
-                  
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addItemToOrder(item);
-                    }}
-                    style={{
-                      backgroundColor: '#4caf50',
-                      color: 'white',
-                      border: 'none',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '0.8em'
-                    }}
-                  >
-                    + Aggiungi
-                  </button>
+          {filteredMenuItems.map((item) => (
+            <article
+              key={item.id}
+              className="order-taking__item"
+              onClick={() => addItemToOrder(item)}
+            >
+              <div className="order-taking__item-header">
+                <div>
+                  <h4>{item.name}</h4>
+                  {item.description && (
+                    <p className="text-muted">{item.description}</p>
+                  )}
+                </div>
+                <div className="order-taking__item-price">
+                  <div>€{item.price}</div>
+                  <small className="text-muted">{item.preparation_time} min</small>
                 </div>
               </div>
-            ))}
-        </div>
-      </div>
 
-      {/* Current Order - Right Side */}
-      <div style={{ flex: '1', backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '2px solid #0984e3' }}>
+              <div className="order-taking__item-footer">
+                <span className="chip-positive">✅ Disponibile</span>
+                <button
+                  type="button"
+                  className="button-glass button-glass--success order-taking__add-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addItemToOrder(item);
+                  }}
+                >
+                  + Aggiungi
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <aside className="order-taking__summary glass-card">
         <h3>🛒 Ordine Corrente</h3>
 
-        {/* Order Info */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-              Tavolo N°:
+        <div className="form-section">
+          <div className="form-field">
+            <label className="form-label" htmlFor="table-number">
+              Tavolo N°
             </label>
             <input
+              id="table-number"
               type="number"
+              min="1"
+              className="input-glass"
+              placeholder="Es. 5"
               value={currentOrder.table_number}
               onChange={(e) => setCurrentOrder(prev => ({ ...prev, table_number: e.target.value }))}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-              placeholder="Es. 5"
-              min="1"
             />
           </div>
 
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-              Nome Cliente (opzionale):
+          <div className="form-field">
+            <label className="form-label" htmlFor="customer-name">
+              Nome Cliente (opzionale)
             </label>
             <input
+              id="customer-name"
               type="text"
+              className="input-glass"
+              placeholder="Nome del cliente"
               value={currentOrder.customer_name}
               onChange={(e) => setCurrentOrder(prev => ({ ...prev, customer_name: e.target.value }))}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-              placeholder="Nome del cliente"
             />
           </div>
 
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-              Tipo Ordine:
+          <div className="form-field">
+            <label className="form-label" htmlFor="order-type">
+              Tipo Ordine
             </label>
             <select
+              id="order-type"
+              className="select-glass"
               value={currentOrder.order_type}
               onChange={(e) => setCurrentOrder(prev => ({ ...prev, order_type: e.target.value }))}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
             >
               <option value="dine_in">Al Tavolo</option>
               <option value="takeout">Da Asporto</option>
@@ -318,90 +286,49 @@ export default function OrderTaking() {
           </div>
         </div>
 
-        {/* Order Items */}
-        <div style={{ marginBottom: '20px' }}>
-          <h4>Piatti Ordinati ({currentOrder.items.length}):</h4>
-          
+        <div className="form-section">
+          <h4>Piatti Ordinati ({currentOrder.items.length})</h4>
           {currentOrder.items.length === 0 ? (
-            <p style={{ color: '#666', fontStyle: 'italic' }}>Nessun piatto selezionato</p>
+            <div className="empty-state">Nessun piatto selezionato</div>
           ) : (
-            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <div className="order-taking__list">
               {currentOrder.items.map((item, index) => (
-                <div key={index} style={{ 
-                  border: '1px solid #eee', 
-                  borderRadius: '4px', 
-                  padding: '10px', 
-                  marginBottom: '8px',
-                  backgroundColor: '#f8f9fa'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <strong style={{ fontSize: '0.9em' }}>{item.menu_item_name}</strong>
+                <div key={index} className="order-taking__list-item">
+                  <div className="order-taking__actions">
+                    <strong>{item.menu_item_name}</strong>
                     <button
+                      type="button"
+                      className="control-button control-button--danger"
                       onClick={() => removeItemFromOrder(item.menu_item_id)}
-                      style={{
-                        backgroundColor: '#f44336',
-                        color: 'white',
-                        border: 'none',
-                        padding: '2px 6px',
-                        borderRadius: '2px',
-                        cursor: 'pointer',
-                        fontSize: '0.8em'
-                      }}
                     >
                       ✕
                     </button>
                   </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+
+                  <div className="order-taking__actions">
                     <button
+                      type="button"
+                      className="control-button control-button--warning"
                       onClick={() => updateItemQuantity(item.menu_item_id, item.quantity - 1)}
-                      style={{
-                        backgroundColor: '#ff9800',
-                        color: 'white',
-                        border: 'none',
-                        padding: '4px 8px',
-                        borderRadius: '2px',
-                        cursor: 'pointer',
-                        fontSize: '0.8em'
-                      }}
                     >
-                      -
+                      −
                     </button>
-                    <span style={{ fontWeight: 'bold', minWidth: '20px', textAlign: 'center' }}>
-                      {item.quantity}
-                    </span>
+                    <span className="order-taking__quantity">{item.quantity}</span>
                     <button
+                      type="button"
+                      className="control-button control-button--success"
                       onClick={() => updateItemQuantity(item.menu_item_id, item.quantity + 1)}
-                      style={{
-                        backgroundColor: '#4caf50',
-                        color: 'white',
-                        border: 'none',
-                        padding: '4px 8px',
-                        borderRadius: '2px',
-                        cursor: 'pointer',
-                        fontSize: '0.8em'
-                      }}
                     >
                       +
                     </button>
-                    <span style={{ marginLeft: 'auto', fontWeight: 'bold' }}>
-                      €{item.total_price.toFixed(2)}
-                    </span>
+                    <span className="order-taking__price">€{item.total_price.toFixed(2)}</span>
                   </div>
 
                   <textarea
+                    className="textarea-glass"
                     placeholder="Note speciali per questo piatto..."
                     value={item.special_instructions}
                     onChange={(e) => updateItemInstructions(item.menu_item_id, e.target.value)}
-                    style={{
-                      width: '100%',
-                      minHeight: '40px',
-                      padding: '4px',
-                      border: '1px solid #ddd',
-                      borderRadius: '2px',
-                      fontSize: '0.8em',
-                      resize: 'vertical'
-                    }}
                   />
                 </div>
               ))}
@@ -409,86 +336,58 @@ export default function OrderTaking() {
           )}
         </div>
 
-        {/* Order Notes */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-            Note generali ordine:
-          </label>
-          <textarea
-            value={currentOrder.special_instructions}
-            onChange={(e) => setCurrentOrder(prev => ({ ...prev, special_instructions: e.target.value }))}
-            style={{
-              width: '100%',
-              minHeight: '60px',
-              padding: '8px',
-              borderRadius: '4px',
-              border: '1px solid #ddd',
-              resize: 'vertical'
-            }}
-            placeholder="Note speciali per l'ordine..."
-          />
+        <div className="form-section">
+          <div className="form-field">
+            <label className="form-label" htmlFor="order-notes">
+              Note generali ordine
+            </label>
+            <textarea
+              id="order-notes"
+              className="textarea-glass"
+              placeholder="Note speciali per l'ordine..."
+              value={currentOrder.special_instructions}
+              onChange={(e) => setCurrentOrder(prev => ({ ...prev, special_instructions: e.target.value }))}
+            />
+          </div>
         </div>
 
-        {/* Order Total */}
         {currentOrder.items.length > 0 && (
-          <div style={{ 
-            backgroundColor: '#e3f2fd', 
-            padding: '15px', 
-            borderRadius: '6px', 
-            marginBottom: '20px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#0984e3' }}>
-              Totale: €{calculateOrderTotal().toFixed(2)}
+          <div className="order-taking__total-card">
+            <div>Totale</div>
+            <div className="order-taking__total-card-value">
+              €{calculateOrderTotal().toFixed(2)}
             </div>
           </div>
         )}
 
-        {/* Submit Button */}
         <button
+          type="button"
+          className="button-glass button-glass--success order-taking__submit"
           onClick={submitOrder}
           disabled={submitting || currentOrder.items.length === 0 || !currentOrder.table_number}
-          style={{
-            width: '100%',
-            backgroundColor: submitting ? '#ccc' : '#4caf50',
-            color: 'white',
-            border: 'none',
-            padding: '12px',
-            borderRadius: '6px',
-            fontSize: '1em',
-            fontWeight: 'bold',
-            cursor: submitting ? 'not-allowed' : 'pointer'
-          }}
         >
           {submitting ? '🕐 Invio in corso...' : '🚀 Invia Ordine alla Cucina'}
         </button>
 
-        {/* Recent Orders */}
         {orderHistory.length > 0 && (
-          <div style={{ marginTop: '30px' }}>
-            <h4>📋 Ultimi Ordini Inviati:</h4>
-            <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+          <div>
+            <h4>📋 Ultimi Ordini Inviati</h4>
+            <div className="order-taking__history">
               {orderHistory.slice(0, 5).map((order) => (
-                <div key={order.id} style={{ 
-                  border: '1px solid #ddd', 
-                  borderRadius: '4px', 
-                  padding: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9em'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div key={order.id} className="order-taking__history-item">
+                  <div className="order-taking__history-header">
                     <strong>{order.order_number}</strong>
-                    <span>Tavolo {order.table_number}</span>
+                    <span className="text-muted">Tavolo {order.table_number}</span>
                   </div>
-                  <div style={{ color: '#666', fontSize: '0.8em' }}>
-                    {order.items.length} piatti - €{order.final_amount} - {order.status}
+                  <div className="text-muted">
+                    {order.items.length} piatti · €{order.final_amount} · {order.status}
                   </div>
                 </div>
               ))}
             </div>
           </div>
         )}
-      </div>
+      </aside>
     </div>
   );
 }

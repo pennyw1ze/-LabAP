@@ -7,7 +7,6 @@ export default function Bills() {
   useEffect(() => {
     getBills()
       .then(data => {
-        // Controllo della struttura dei dati
         if (Array.isArray(data)) {
           setBills(data);
         } else if (data.bills && Array.isArray(data.bills)) {
@@ -21,15 +20,26 @@ export default function Bills() {
   }, []);
 
   return (
-    <div>
-      <h2>Bills</h2>
-      <ul className="order-list">
-        {bills.map(b => (
-          <li key={b.id}>
-            Bill {b.id} - Order {b.orderId} - ${b.total}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <section className="payments">
+      <div>
+        <h2>🧾 Conti</h2>
+        <span className="text-muted">Riepilogo dei conti generati per gli ordini.</span>
+      </div>
+
+      {bills.length === 0 ? (
+        <div className="empty-state">Nessun conto disponibile.</div>
+      ) : (
+        <ul className="payments__list">
+          {bills.map((bill) => (
+            <li key={bill.id || bill._id} className="payments__item">
+              <span>
+                Conto {bill.id || bill._id} · Ordine {bill.orderId || bill.order_id} · €{bill.total}
+              </span>
+              {bill.status && <span className="text-muted">Stato: {bill.status}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
