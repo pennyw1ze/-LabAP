@@ -1,54 +1,79 @@
-from flask import Blueprint, request, jsonify, current_app
-from sqlalchemy import desc
-from datetime import datetime, timedelta
-import uuid
-
+from flask import Blueprint, request, jsonify
 from models import db, Order, OrderItem
-from services.menu_service import MenuService
-from services.message_queue_service import mq_service
+from sqlalchemy.exc import IntegrityError
+from marshmallow import Schema, fields, ValidationError
+from datetime import datetime, timedelta
+import requests
 
 order_bp = Blueprint('orders', __name__)
 
+# Configuration - URL del menu service
+MENU_SERVICE_URL = 'http://localhost:3001'
+
+# Marshmallow schemas
+class OrderItemSchema(Schema):
+    menu_item_id = fields.Str(required=True)
+    menu_item_name = fields.Str(required=True)
+    quantity = fields.Int(required=True, validate=lambda x: x > 0)
+    unit_price = fields.Float(required=True, validate=lambda x: x >= 0)
+    total_price = fields.Float(required=True, validate=lambda x: x >= 0)
+    special_instructions = fields.Str(allow_none=True)
+
+class OrderSchema(Schema):
+    table_number = fields.Int(required=True, validate=lambda x: x > 0)
+    customer_name = fields.Str(allow_none=True)
+    order_type = fields.Str(required=True, validate=lambda x: x in ['dine_in', 'takeout', 'delivery'])
+    special_instructions = fields.Str(allow_none=True)
+    items = fields.List(fields.Nested(OrderItemSchema), required=True, validate=lambda x: len(x) > 0)
+
+order_schema = OrderSchema()
+order_items_schema = OrderItemSchema(many=True)
+
+
+def generate_order_number():
+    """Generate a unique order number"""
+    import random
+    prefix = datetime.now().strftime("%Y%m%d")
+    suffix = random.randint(1000, 9999)
+    return f"ORD-{prefix}-{suffix}"
+
+
+def calculate_estimated_completion_time(items):
+    """Calculate estimated completion time based on preparation times"""
+    # Get the maximum preparation time from all items
+    max_prep_time = max([item.get('preparation_time', 15) for item in items], default=15)
+    # Add 5 minutes buffer
+    estimated_minutes = max_prep_time + 5
+    return datetime.utcnow() + timedelta(minutes=estimated_minutes)
+
+
 @order_bp.route('/', methods=['GET'])
-def get_orders():
+def get_all_orders():
     """Get all orders with optional filtering"""
     try:
-        # Get query parameters
+        # Query parameters
         status = request.args.get('status')
         table_number = request.args.get('table_number')
-        date_from = request.args.get('date_from')
-        date_to = request.args.get('date_to')
-        limit = request.args.get('limit', 50, type=int)
+        order_type = request.args.get('order_type')
         
-        # Base query
         query = Order.query
         
         # Apply filters
         if status:
             if status == 'active':
+                # Active orders are pending, confirmed, or preparing
                 query = query.filter(Order.status.in_(['pending', 'confirmed', 'preparing']))
             else:
                 query = query.filter(Order.status == status)
-                
-        if table_number:
-            query = query.filter(Order.table_number == table_number)
-            
-        if date_from:
-            try:
-                date_from = datetime.fromisoformat(date_from)
-                query = query.filter(Order.created_at >= date_from)
-            except ValueError:
-                pass
-                
-        if date_to:
-            try:
-                date_to = datetime.fromisoformat(date_to)
-                query = query.filter(Order.created_at <= date_to)
-            except ValueError:
-                pass
         
-        # Order by creation time (newest first) and apply limit
-        orders = query.order_by(desc(Order.created_at)).limit(limit).all()
+        if table_number:
+            query = query.filter(Order.table_number == int(table_number))
+        
+        if order_type:
+            query = query.filter(Order.order_type == order_type)
+        
+        # Order by creation date (newest first)
+        orders = query.order_by(Order.created_at.desc()).all()
         
         return jsonify({
             'success': True,
@@ -57,17 +82,25 @@ def get_orders():
         })
         
     except Exception as e:
-        current_app.logger.error(f"Error getting orders: {str(e)}")
+        print(f"Error in get_all_orders: {str(e)}")
         return jsonify({
             'success': False,
-            'message': f'Error retrieving orders: {str(e)}'
+            'message': 'Error fetching orders',
+            'error': str(e)
         }), 500
 
-@order_bp.route('/<order_id>', methods=['GET'])
-def get_order(order_id):
-    """Get specific order by ID"""
+
+@order_bp.route('/<string:order_id>', methods=['GET'])
+def get_order_by_id(order_id):
+    """Get order by ID"""
     try:
-        order = Order.query.get_or_404(order_id)
+        order = Order.query.get(order_id)
+        
+        if not order:
+            return jsonify({
+                'success': False,
+                'message': 'Order not found'
+            }), 404
         
         return jsonify({
             'success': True,
@@ -75,130 +108,137 @@ def get_order(order_id):
         })
         
     except Exception as e:
-        current_app.logger.error(f"Error getting order {order_id}: {str(e)}")
+        print(f"Error in get_order_by_id: {str(e)}")
         return jsonify({
             'success': False,
-            'message': f'Error retrieving order: {str(e)}'
+            'message': 'Error fetching order',
+            'error': str(e)
         }), 500
+
 
 @order_bp.route('/', methods=['POST'])
 def create_order():
     """Create a new order"""
     try:
-        data = request.get_json()
+        data = request.json
+        print(f"Received order data: {data}")
         
-        # Validate required fields
-        required_fields = ['table_number', 'items']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({
-                    'success': False,
-                    'message': f'Missing required field: {field}'
-                }), 400
-        
-        if not data['items']:
+        # Validate request data
+        try:
+            validated_data = order_schema.load(data)
+        except ValidationError as err:
+            print(f"Validation error: {err.messages}")
             return jsonify({
                 'success': False,
-                'message': 'Order must contain at least one item'
+                'message': 'Validation error',
+                'errors': err.messages
             }), 400
         
-        # Validate menu items and check availability
-        menu_items_to_validate = [{'menu_item_id': str(item['menu_item_id'])} for item in data['items']]
-        invalid_items = MenuService.validate_menu_items(menu_items_to_validate)
+        # Verify menu items availability with menu service
+        menu_item_ids = [item['menu_item_id'] for item in validated_data['items']]
+        try:
+            menu_response = requests.get(f"{MENU_SERVICE_URL}/api/menu/available", timeout=5)
+            if menu_response.ok:
+                available_items = {item['id']: item for item in menu_response.json().get('data', [])}
+                
+                # Check if all ordered items are available
+                unavailable_items = []
+                for item_id in menu_item_ids:
+                    if item_id not in available_items:
+                        unavailable_items.append(item_id)
+                
+                if unavailable_items:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Some menu items are not available',
+                        'unavailable_items': unavailable_items
+                    }), 400
+        except Exception as e:
+            print(f"Warning: Could not verify menu availability: {str(e)}")
+            # Continue anyway - menu service might be temporarily unavailable
         
-        if invalid_items:
-            return jsonify({
-                'success': False,
-                'message': f'Invalid or unavailable menu items: {invalid_items}'
-            }), 400
-        
-        # Generate order number
-        order_number = f"ORD-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
-        
-        # Calculate estimated completion time
-        total_prep_time = 0
-        total_amount = 0
+        # Calculate totals
+        total_amount = sum(item['total_price'] for item in validated_data['items'])
+        tax_rate = 0.10  # 10% tax
+        tax_amount = total_amount * tax_rate
+        discount_amount = 0  # No discount for now
+        final_amount = total_amount + tax_amount - discount_amount
         
         # Create order
         order = Order(
-            order_number=order_number,
-            table_number=data['table_number'],
-            customer_name=data.get('customer_name'),
-            order_type=data.get('order_type', 'dine_in'),
-            special_instructions=data.get('special_instructions'),
-            status='pending'
+            order_number=generate_order_number(),
+            table_number=validated_data['table_number'],
+            customer_name=validated_data.get('customer_name'),
+            order_type=validated_data['order_type'],
+            status='pending',
+            total_amount=total_amount,
+            tax_amount=tax_amount,
+            discount_amount=discount_amount,
+            final_amount=final_amount,
+            special_instructions=validated_data.get('special_instructions'),
+            estimated_completion_time=calculate_estimated_completion_time(validated_data['items'])
         )
         
         db.session.add(order)
-        db.session.flush()  # Get the order ID
+        db.session.flush()  # Get order ID
         
         # Create order items
-        for item_data in data['items']:
-            # Get menu item details
-            menu_item = MenuService.get_menu_item(item_data['menu_item_id'])
-            if not menu_item:
-                return jsonify({
-                    'success': False,
-                    'message': f'Menu item not found: {item_data["menu_item_id"]}'
-                }), 400
-            
-            unit_price = float(menu_item['price'])
-            quantity = int(item_data['quantity'])
-            total_price = unit_price * quantity
-            
+        for item_data in validated_data['items']:
             order_item = OrderItem(
                 order_id=order.id,
                 menu_item_id=item_data['menu_item_id'],
-                menu_item_name=menu_item['name'],
-                quantity=quantity,
-                unit_price=unit_price,
-                total_price=total_price,
-                special_instructions=item_data.get('special_instructions')
+                menu_item_name=item_data['menu_item_name'],
+                quantity=item_data['quantity'],
+                unit_price=item_data['unit_price'],
+                total_price=item_data['total_price'],
+                special_instructions=item_data.get('special_instructions'),
+                status='pending'
             )
-            
             db.session.add(order_item)
-            
-            total_amount += total_price
-            total_prep_time = max(total_prep_time, menu_item.get('preparation_time', 15))
-        
-        # Update order totals and estimated time
-        order.total_amount = total_amount
-        order.tax_amount = total_amount * 0.10  # 10% tax
-        order.final_amount = order.total_amount + order.tax_amount
-        
-        # Calculate estimated completion time (base prep time + 10 minutes buffer)
-        estimated_time = datetime.utcnow() + timedelta(minutes=total_prep_time + 10)
-        order.estimated_completion_time = estimated_time
         
         db.session.commit()
         
-        # Publish order event to message queue
-        try:
-            mq_service.publish_order_event('created', order.to_dict())
-        except Exception as mq_error:
-            current_app.logger.warning(f"Failed to publish order event: {str(mq_error)}")
-        
-        current_app.logger.info(f"Created order {order.order_number} for table {order.table_number}")
+        print(f"Order created successfully: {order.order_number}")
         
         return jsonify({
             'success': True,
-            'data': order.to_dict(),
-            'message': f'Order {order.order_number} created successfully'
+            'message': 'Order created successfully',
+            'data': order.to_dict()
         }), 201
         
-    except Exception as e:
+    except IntegrityError as e:
         db.session.rollback()
-        current_app.logger.error(f"Error creating order: {str(e)}")
+        print(f"IntegrityError: {str(e)}")
         return jsonify({
             'success': False,
-            'message': f'Error creating order: {str(e)}'
+            'message': 'Database integrity error',
+            'error': str(e.orig) if hasattr(e, 'orig') else str(e)
+        }), 400
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in create_order: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': 'Error creating order',
+            'error': str(e)
         }), 500
 
-@order_bp.route('/<order_id>/status', methods=['PUT'])
+
+@order_bp.route('/<string:order_id>/status', methods=['PUT'])
 def update_order_status(order_id):
     """Update order status"""
     try:
-        data = request.get_json()
+        order = Order.query.get(order_id)
+        
+        if not order:
+            return jsonify({
+                'success': False,
+                'message': 'Order not found'
+            }), 404
+        
+        data = request.json
         new_status = data.get('status')
         
         if not new_status:
@@ -207,69 +247,68 @@ def update_order_status(order_id):
                 'message': 'Status is required'
             }), 400
         
+        # Validate status
         valid_statuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled']
         if new_status not in valid_statuses:
             return jsonify({
                 'success': False,
-                'message': f'Invalid status. Must be one of: {valid_statuses}'
+                'message': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'
             }), 400
         
-        order = Order.query.get_or_404(order_id)
-        old_status = order.status
+        print(f"Updating order {order_id} status from {order.status} to {new_status}")
+        
         order.status = new_status
         order.updated_at = datetime.utcnow()
         
-        # If order is confirmed, update all items to confirmed
-        if new_status == 'confirmed':
+        # Update all items status when order status changes
+        if new_status in ['preparing', 'ready', 'delivered']:
             for item in order.items:
                 if item.status == 'pending':
-                    item.status = 'pending'  # Items stay pending until individually started
-        
-        # If order is preparing, update pending items to preparing
-        elif new_status == 'preparing':
-            for item in order.items:
-                if item.status == 'pending':
-                    item.status = 'preparing'
-        
-        # If order is ready, update all items to ready
-        elif new_status == 'ready':
-            for item in order.items:
-                if item.status in ['pending', 'preparing']:
-                    item.status = 'ready'
+                    item.status = new_status if new_status != 'confirmed' else 'pending'
         
         db.session.commit()
         
-        # Publish status update event
-        try:
-            mq_service.publish_order_event('status_updated', {
-                **order.to_dict(),
-                'previous_status': old_status,
-                'new_status': new_status
-            })
-        except Exception as mq_error:
-            current_app.logger.warning(f"Failed to publish status update event: {str(mq_error)}")
-        
-        current_app.logger.info(f"Order {order.order_number} status updated: {old_status} -> {new_status}")
+        print(f"Order status updated successfully: {order.order_number}")
         
         return jsonify({
             'success': True,
-            'data': order.to_dict(),
-            'message': f'Order status updated to {new_status}'
+            'message': 'Order status updated successfully',
+            'data': order.to_dict()
         })
         
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error updating order status: {str(e)}")
+        print(f"Error in update_order_status: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
-            'message': f'Error updating order status: {str(e)}'
+            'message': 'Error updating order status',
+            'error': str(e)
         }), 500
 
-@order_bp.route('/<order_id>/items/<item_id>/status', methods=['PUT'])
+
+@order_bp.route('/<string:order_id>/items/<string:item_id>/status', methods=['PUT'])
 def update_order_item_status(order_id, item_id):
-    """Update individual order item status"""
+    """Update order item status"""
     try:
-        data = request.get_json()
+        order = Order.query.get(order_id)
+        
+        if not order:
+            return jsonify({
+                'success': False,
+                'message': 'Order not found'
+            }), 404
+        
+        order_item = OrderItem.query.filter_by(id=item_id, order_id=order_id).first()
+        
+        if not order_item:
+            return jsonify({
+                'success': False,
+                'message': 'Order item not found'
+            }), 404
+        
+        data = request.json
         new_status = data.get('status')
         
         if not new_status:
@@ -278,79 +317,84 @@ def update_order_item_status(order_id, item_id):
                 'message': 'Status is required'
             }), 400
         
+        # Validate status
         valid_statuses = ['pending', 'preparing', 'ready', 'served', 'cancelled']
         if new_status not in valid_statuses:
             return jsonify({
                 'success': False,
-                'message': f'Invalid status. Must be one of: {valid_statuses}'
+                'message': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'
             }), 400
         
-        order = Order.query.get_or_404(order_id)
-        order_item = OrderItem.query.filter_by(id=item_id, order_id=order_id).first_or_404()
+        print(f"Updating item {item_id} status from {order_item.status} to {new_status}")
         
-        old_status = order_item.status
         order_item.status = new_status
         order_item.updated_at = datetime.utcnow()
         
-        # Update order updated_at timestamp
-        order.updated_at = datetime.utcnow()
-        
-        # Check if all items are ready and update order status accordingly
-        if new_status == 'ready':
-            all_items_ready = all(item.status in ['ready', 'served'] for item in order.items)
-            if all_items_ready and order.status != 'ready':
-                order.status = 'ready'
+        # Check if all items are ready and update order status
+        all_items_ready = all(item.status in ['ready', 'served'] for item in order.items)
+        if all_items_ready and order.status != 'ready':
+            order.status = 'ready'
         
         db.session.commit()
         
-        # Publish item status update event
-        try:
-            mq_service.publish_order_event('item_status_updated', {
-                'order_id': str(order.id),
-                'order_number': order.order_number,
-                'item_id': str(order_item.id),
-                'item_name': order_item.menu_item_name,
-                'previous_status': old_status,
-                'new_status': new_status,
-                'table_number': order.table_number
-            })
-        except Exception as mq_error:
-            current_app.logger.warning(f"Failed to publish item status update event: {str(mq_error)}")
-        
-        current_app.logger.info(f"Order item {order_item.menu_item_name} in order {order.order_number} status updated: {old_status} -> {new_status}")
+        print(f"Order item status updated successfully")
         
         return jsonify({
             'success': True,
-            'data': order.to_dict(),
-            'message': f'Item status updated to {new_status}'
+            'message': 'Order item status updated successfully',
+            'data': order.to_dict()
         })
         
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error updating order item status: {str(e)}")
+        print(f"Error in update_order_item_status: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
-            'message': f'Error updating order item status: {str(e)}'
+            'message': 'Error updating order item status',
+            'error': str(e)
         }), 500
 
-@order_bp.route('/kitchen', methods=['GET'])
-def get_kitchen_orders():
-    """Get orders specifically for kitchen display"""
+
+@order_bp.route('/<string:order_id>', methods=['DELETE'])
+def delete_order(order_id):
+    """Delete order"""
     try:
-        # Get only active orders (not delivered or cancelled)
-        orders = Order.query.filter(
-            Order.status.in_(['pending', 'confirmed', 'preparing', 'ready'])
-        ).order_by(Order.created_at.asc()).all()
+        order = Order.query.get(order_id)
+        
+        if not order:
+            return jsonify({
+                'success': False,
+                'message': 'Order not found'
+            }), 404
+        
+        # Only allow deletion of cancelled orders or very recent orders
+        if order.status not in ['pending', 'cancelled']:
+            return jsonify({
+                'success': False,
+                'message': 'Can only delete pending or cancelled orders'
+            }), 400
+        
+        print(f"Deleting order: {order.order_number}")
+        
+        db.session.delete(order)
+        db.session.commit()
+        
+        print(f"Order deleted successfully: {order.order_number}")
         
         return jsonify({
             'success': True,
-            'data': [order.to_dict() for order in orders],
-            'count': len(orders)
+            'message': 'Order deleted successfully'
         })
         
     except Exception as e:
-        current_app.logger.error(f"Error getting kitchen orders: {str(e)}")
+        db.session.rollback()
+        print(f"Error in delete_order: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
-            'message': f'Error retrieving kitchen orders: {str(e)}'
+            'message': 'Error deleting order',
+            'error': str(e)
         }), 500
