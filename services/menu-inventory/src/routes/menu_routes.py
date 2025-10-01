@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models import db, MenuItem
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import inspect
 from marshmallow import Schema, fields, ValidationError
 import uuid
 import json
@@ -239,6 +240,13 @@ def delete_menu_item(menu_id):
                 'success': False,
                 'message': 'Menu item not found'
             }), 404
+
+        inspector = inspect(db.engine)
+        if inspector.has_table('menu_inventory_items'):
+            db.session.execute(
+                'DELETE FROM menu_inventory_items WHERE menu_item_id = :menu_id',
+                {'menu_id': menu_id}
+            )
 
         db.session.delete(menu_item)
         db.session.commit()

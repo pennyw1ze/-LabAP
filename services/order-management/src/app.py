@@ -29,6 +29,24 @@ def create_app(config_name='default'):
             'uptime': time.process_time()
         })
     
+    # API Overview endpoint
+    @app.route('/api')
+    def api_overview():
+        return jsonify({
+            'service': 'ByteRisto Order Management API',
+            'version': '2.0.0',
+            'endpoints': {
+                'orders': {
+                    'GET /api/orders/': 'Get all orders (filter by status, table_number, order_type)',
+                    'POST /api/orders/': 'Create new order',
+                    'GET /api/orders/{id}': 'Get order by ID',
+                    'PUT /api/orders/{id}/status': 'Update order status',
+                    'PUT /api/orders/{id}/items/{item_id}/status': 'Update order item status',
+                    'DELETE /api/orders/{id}': 'Delete order (pending/cancelled only)'
+                }
+            }
+        })
+    
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
@@ -70,5 +88,6 @@ if __name__ == '__main__':
     
     print(f"🚀 Order Management Service running on port {port}")
     print(f"❤️ Health check available at http://localhost:{port}/health")
+    print(f"📖 API documentation at http://localhost:{port}/api")
     
     app.run(host='0.0.0.0', port=port, debug=debug)
