@@ -131,32 +131,13 @@ export const getKitchenOrders = async () => {
   }
 };
 
-export const getOrderAnalytics = async (dateFrom, dateTo) => {
-  try {
-    const params = new URLSearchParams();
-    if (dateFrom) params.append('date_from', dateFrom);
-    if (dateTo) params.append('date_to', dateTo);
+// === MENU SERVICE ===
 
-    const response = await fetch(`${ORDER_SERVICE_URL}/api/orders/analytics?${params}`);
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.message);
-    }
-    
-    return data.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
-};
-
-// === MENU & INVENTORY (aggiorniamo le funzioni esistenti) ===
-
-const MENU_INVENTORY_SERVICE_URL = process.env.REACT_APP_MENU_SERVICE_URL || 'http://localhost:3001';
+const MENU_SERVICE_URL = process.env.REACT_APP_MENU_SERVICE_URL || 'http://localhost:3001';
 
 export const getMenu = async () => {
   try {
-    const response = await fetch(`${MENU_INVENTORY_SERVICE_URL}/api/menu`);
+    const response = await fetch(`${MENU_SERVICE_URL}/api/menu`);
     const data = await response.json();
     
     if (!data.success) {
@@ -164,36 +145,6 @@ export const getMenu = async () => {
     }
     
     return data.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
-};
-
-export const getInventory = async () => {
-  try {
-    const response = await fetch(`${MENU_INVENTORY_SERVICE_URL}/api/inventory`);
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.message);
-    }
-    
-    return data.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
-};
-
-export const getInventoryAlerts = async () => {
-  try {
-    const response = await fetch(`${MENU_INVENTORY_SERVICE_URL}/api/inventory/alerts`);
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.message);
-    }
-    
-    return data.summary; // Ritorniamo il summary per facilità
   } catch (error) {
     throw handleApiError(error);
   }
@@ -201,95 +152,12 @@ export const getInventoryAlerts = async () => {
 
 export const createMenuItem = async (menuItemData) => {
   try {
-    const response = await fetch(`${MENU_INVENTORY_SERVICE_URL}/api/menu`, {
+    const response = await fetch(`${MENU_SERVICE_URL}/api/menu`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(menuItemData),
-    });
-    
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.message);
-    }
-    
-    return data.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
-};
-
-export const createInventoryItem = async (inventoryItemData) => {
-  try {
-    const response = await fetch(`${MENU_INVENTORY_SERVICE_URL}/api/inventory`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(inventoryItemData),
-    });
-    
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.message);
-    }
-    
-    return data.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
-};
-
-export const adjustInventoryStock = async (itemId, adjustment) => {
-  try {
-    const response = await fetch(`${MENU_INVENTORY_SERVICE_URL}/api/inventory/${itemId}/adjust`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ adjustment }),
-    });
-    
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.message);
-    }
-    
-    return data.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
-};
-
-export const getMenuIngredients = async (menuId) => {
-  try {
-    const response = await fetch(`${MENU_INVENTORY_SERVICE_URL}/api/menu/${menuId}/ingredients`);
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.message);
-    }
-    
-    return data.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
-};
-
-export const checkMenuAvailability = async (menuItemIds = []) => {
-  try {
-    const requestBody = menuItemIds.length > 0 ? { menu_item_ids: menuItemIds } : {};
-    
-    const response = await fetch(`${MENU_INVENTORY_SERVICE_URL}/api/menu/check-availability`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
     });
     
     const data = await response.json();
@@ -347,38 +215,7 @@ export const calculateOrderTiming = (createdAt, estimatedCompletion) => {
   };
 };
 
-// === INVENTORY INTEGRATION ===
-
-// Funzione per ridurre automaticamente l'inventory quando un ordine viene confermato
-export const processInventoryReduction = async (orderItems) => {
-  // Questa funzione dovrebbe essere chiamata dal backend quando un ordine viene confermato
-  // Per ora è solo un placeholder che mostra la logica
-  
-  const reductionPromises = orderItems.map(async (orderItem) => {
-    try {
-      // Per ogni item dell'ordine, otteniamo gli ingredienti necessari
-      const menuIngredients = await getMenuIngredients(orderItem.menu_item_id);
-      
-      // Per ogni ingrediente, riduciamo lo stock
-      const adjustmentPromises = menuIngredients.ingredients.map(async (ingredient) => {
-        const requiredQuantity = ingredient.quantity * orderItem.quantity;
-        const adjustment = -requiredQuantity; // Negativo per ridurre
-        
-        return adjustInventoryStock(ingredient.inventory_item.id, adjustment);
-      });
-      
-      await Promise.all(adjustmentPromises);
-    } catch (error) {
-      console.error(`Errore nel ridurre inventory per ${orderItem.menu_item_name}:`, error);
-      throw error;
-    }
-  });
-  
-  await Promise.all(reductionPromises);
-};
-
 // Export per compatibilità con il codice esistente
 export {
   getOrders as getBills, // Alias per compatibilità
-  getOrderAnalytics as getAnalytics, // Alias per compatibilità
 };

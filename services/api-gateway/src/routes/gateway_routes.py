@@ -97,73 +97,6 @@ def delete_menu_item(menu_id):
     )
     return jsonify(response_data), status_code
 
-# Inventory Routes
-@gateway_bp.route('/inventory/', methods=['GET'])
-@gateway_bp.route('/inventory', methods=['GET'])
-def get_inventory_items():
-    """Get all inventory items"""
-    response_data, status_code = proxy_request(
-        current_app.config['MENU_SERVICE_URL'],
-        '/api/inventory/',
-        method='GET',
-        params=request.args
-    )
-    return jsonify(response_data), status_code
-
-@gateway_bp.route('/inventory/<item_id>', methods=['GET'])
-def get_inventory_item(item_id):
-    """Get specific inventory item"""
-    response_data, status_code = proxy_request(
-        current_app.config['MENU_SERVICE_URL'],
-        f'/api/inventory/{item_id}',
-        method='GET'
-    )
-    return jsonify(response_data), status_code
-
-@gateway_bp.route('/inventory/', methods=['POST'])
-@gateway_bp.route('/inventory', methods=['POST'])
-def create_inventory_item():
-    """Create new inventory item"""
-    response_data, status_code = proxy_request(
-        current_app.config['MENU_SERVICE_URL'],
-        '/api/inventory/',
-        method='POST',
-        data=request.json
-    )
-    return jsonify(response_data), status_code
-
-@gateway_bp.route('/inventory/<item_id>', methods=['PUT'])
-def update_inventory_item(item_id):
-    """Update inventory item"""
-    response_data, status_code = proxy_request(
-        current_app.config['MENU_SERVICE_URL'],
-        f'/api/inventory/{item_id}',
-        method='PUT',
-        data=request.json
-    )
-    return jsonify(response_data), status_code
-
-@gateway_bp.route('/inventory/<item_id>/adjust', methods=['POST'])
-def adjust_inventory_stock(item_id):
-    """Adjust inventory stock"""
-    response_data, status_code = proxy_request(
-        current_app.config['MENU_SERVICE_URL'],
-        f'/api/inventory/{item_id}/adjust',
-        method='POST',
-        data=request.json
-    )
-    return jsonify(response_data), status_code
-
-@gateway_bp.route('/inventory/alerts', methods=['GET'])
-def get_inventory_alerts():
-    """Get inventory alerts"""
-    response_data, status_code = proxy_request(
-        current_app.config['MENU_SERVICE_URL'],
-        '/api/inventory/alerts',
-        method='GET'
-    )
-    return jsonify(response_data), status_code
-
 # Order Service Routes
 @gateway_bp.route('/orders', methods=['GET'])
 def get_orders():
@@ -311,61 +244,6 @@ def get_daily_billing_summary():
     response_data, status_code = proxy_request(
         current_app.config['BILLING_SERVICE_URL'],
         '/api/reports/daily-summary',
-        method='GET',
-        params=request.args
-    )
-    return jsonify(response_data), status_code
-
-# Analytics Service Routes
-@gateway_bp.route('/analytics/dashboard', methods=['GET'])
-def get_analytics_dashboard():
-    """Get analytics dashboard"""
-    response_data, status_code = proxy_request(
-        current_app.config['ANALYTICS_SERVICE_URL'],
-        '/api/analytics/dashboard',
-        method='GET'
-    )
-    return jsonify(response_data), status_code
-
-@gateway_bp.route('/analytics/sales-report', methods=['GET'])
-def get_sales_report():
-    """Get sales report"""
-    response_data, status_code = proxy_request(
-        current_app.config['ANALYTICS_SERVICE_URL'],
-        '/api/analytics/sales-report',
-        method='GET',
-        params=request.args
-    )
-    return jsonify(response_data), status_code
-
-@gateway_bp.route('/analytics/menu-performance', methods=['GET'])
-def get_menu_performance():
-    """Get menu performance analytics"""
-    response_data, status_code = proxy_request(
-        current_app.config['ANALYTICS_SERVICE_URL'],
-        '/api/analytics/menu-performance',
-        method='GET',
-        params=request.args
-    )
-    return jsonify(response_data), status_code
-
-@gateway_bp.route('/analytics/order-trends', methods=['GET'])
-def get_order_trends():
-    """Get order trends"""
-    response_data, status_code = proxy_request(
-        current_app.config['ANALYTICS_SERVICE_URL'],
-        '/api/analytics/order-trends',
-        method='GET',
-        params=request.args
-    )
-    return jsonify(response_data), status_code
-
-@gateway_bp.route('/analytics/financial-summary', methods=['GET'])
-def get_financial_summary():
-    """Get financial summary"""
-    response_data, status_code = proxy_request(
-        current_app.config['ANALYTICS_SERVICE_URL'],
-        '/api/analytics/financial-summary',
         method='GET',
         params=request.args
     )

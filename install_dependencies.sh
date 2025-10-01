@@ -69,7 +69,6 @@ REDIS_URL=redis://redis:6379
 MENU_SERVICE_URL=http://menu-inventory-service:3001
 ORDER_SERVICE_URL=http://order-management-service:3002
 BILLING_SERVICE_URL=http://billing-payments-service:3003
-ANALYTICS_SERVICE_URL=http://analytics-reporting-service:3004
 EOF
     echo "✅ Created .env file with default configuration"
 else
@@ -106,7 +105,6 @@ echo "   • API Gateway: http://localhost:3000"
 echo "   • Menu Inventory: http://localhost:3001" 
 echo "   • Order Management: http://localhost:3002"
 echo "   • Billing Payments: http://localhost:3003"
-echo "   • Analytics Reporting: http://localhost:3004"
 echo "   • RabbitMQ Management: http://localhost:15672 (admin/password)"
 echo ""
 echo "🧪 Test all APIs:"

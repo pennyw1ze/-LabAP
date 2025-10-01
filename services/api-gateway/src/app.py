@@ -31,11 +31,9 @@ def create_app(config_name='default'):
             'endpoints': {
                 'health': '/health',
                 'menu': '/api/menu',
-                'inventory': '/api/inventory',
                 'orders': '/api/orders',
                 'bills': '/api/bills',
-                'payments': '/api/payments',
-                'analytics': '/api/analytics'
+                'payments': '/api/payments'
             }
         })
     
@@ -69,13 +67,6 @@ def create_app(config_name='default'):
                 services_health['billing-service'] = 'healthy' if response.status_code == 200 else 'unhealthy'
             except:
                 services_health['billing-service'] = 'unavailable'
-            
-            # Check analytics service
-            try:
-                response = requests.get(f"{app.config['ANALYTICS_SERVICE_URL']}/health", timeout=timeout)
-                services_health['analytics-service'] = 'healthy' if response.status_code == 200 else 'unhealthy'
-            except:
-                services_health['analytics-service'] = 'unavailable'
             
         except Exception as e:
             print(f"Error checking service health: {str(e)}")

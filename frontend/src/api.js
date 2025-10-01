@@ -1,6 +1,6 @@
 const API_BASE = "http://localhost:3001/api"; // Porta corretta del microservizio
 
-// --- Menu & Inventory ---
+// --- Menu ---
 export async function getMenu(filters = {}) {
   try {
     const params = new URLSearchParams();
@@ -111,76 +111,5 @@ export async function makePayment(paymentData) {
 // --- Bills (placeholder for other microservices) ---
 export async function getBills() {
   // Placeholder - da implementare quando avrai il microservizio bills
-  return [];
-}
-
-// --- Analytics (placeholder for other microservices) ---
-export async function getAnalytics() {
-  // Placeholder - da implementare quando avrai il microservizio analytics
-  return { totalOrders: 0, totalRevenue: 0, popularItems: [] };
-}
-// byteristo-frontend/src/api.js - Add these functions to the existing file
-
-// --- Menu-Ingredients Association Functions ---
-export async function getMenuIngredients(menuId) {
-  try {
-    const res = await fetch(`${API_BASE}/menu/${menuId}/ingredients`);
-    if (!res.ok) throw new Error('Failed to fetch menu ingredients');
-    const data = await res.json();
-    return data.success ? data.data : null;
-  } catch (error) {
-    console.error('Error fetching menu ingredients:', error);
-    return null;
-  }
-}
-
-export async function addIngredientToMenu(menuId, ingredientData) {
-  try {
-    const res = await fetch(`${API_BASE}/menu/${menuId}/ingredients`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(ingredientData),
-    });
-    if (!res.ok) throw new Error('Failed to add ingredient to menu');
-    const data = await res.json();
-    return data.success ? data.data : null;
-  } catch (error) {
-    console.error('Error adding ingredient to menu:', error);
-    throw error;
-  }
-}
-
-export async function updateMenuIngredient(menuId, inventoryItemId, updateData) {
-  try {
-    const res = await fetch(`${API_BASE}/menu/${menuId}/ingredients/${inventoryItemId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updateData),
-    });
-    if (!res.ok) throw new Error('Failed to update menu ingredient');
-    const data = await res.json();
-    return data.success ? data.data : null;
-  } catch (error) {
-    console.error('Error updating menu ingredient:', error);
-    throw error;
-  }
-}
-
-export async function removeIngredientFromMenu(menuId, inventoryItemId) {
-  try {
-    const res = await fetch(`${API_BASE}/menu/${menuId}/ingredients/${inventoryItemId}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) throw new Error('Failed to remove ingredient from menu');
-    const data = await res.json();
-    return data.success;
-  } catch (error) {
-    console.error('Error removing ingredient from menu:', error);
-    throw error;
-  }
-}
-
-export async function checkMenuAvailability(menuItemIds = []) {
-  console.warn('checkMenuAvailability is deprecated: availability is now managed manually.');
   return [];
 }

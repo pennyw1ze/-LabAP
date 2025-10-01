@@ -4,7 +4,6 @@ import './App.css';
 // Import existing components
 import MenuDisplay from './components/MenuDisplay';
 import MenuManagement from './components/MenuManagement';
-import Analytics from './components/Analytics';
 import Bills from './components/Bills';
 import Payments from './components/Payments';
 
@@ -23,14 +22,13 @@ function App() {
   }, []);
 
   const tabs = [
+    { id: 'menu', label: '🍽️ Menu', component: <MenuDisplay /> },
+    { id: 'menuManagement', label: '🛠️ Gestione Menu', component: <MenuManagement /> },
     { id: 'orderTaking', label: '📋 Presa Ordini', component: <OrderTaking /> },
     { id: 'activeOrders', label: '📊 Ordini Attivi', component: <ActiveOrders /> },
     { id: 'kitchen', label: '👨‍🍳 Cucina', component: <KitchenDisplay /> },
-    { id: 'menu', label: '🍽️ Menu', component: <MenuDisplay /> },
-    { id: 'menuManagement', label: '⚙️ Gestione Menu', component: <MenuManagement /> },
-    { id: 'analytics', label: '📈 Analytics', component: <Analytics /> },
-    { id: 'bills', label: '🧾 Bills', component: <Bills /> },
     { id: 'payments', label: '💳 Payments', component: <Payments /> },
+    { id: 'bills', label: '🧾 Bills', component: <Bills /> },
   ];
 
   const getTabStyle = (tabId) => ({
@@ -151,7 +149,7 @@ function App() {
           </div>
           
           <div style={{ display: 'flex', gap: '20px', fontSize: '0.8em' }}>
-            <span>🔗 Menu-Inventory Service: Attivo</span>
+            <span>🔗 Menu Service: Attivo</span>
             <span>🔗 Order Management Service: Attivo</span>
             <span>📡 Real-time Updates: Attivi</span>
           </div>

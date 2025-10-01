@@ -5,7 +5,6 @@ import uuid
 
 from models import db, Order, OrderItem
 from services.menu_service import MenuService
-from services.inventory_service import InventoryService
 from services.message_queue_service import mq_service
 
 order_bp = Blueprint('orders', __name__)
@@ -220,16 +219,6 @@ def update_order_status(order_id):
         order.status = new_status
         order.updated_at = datetime.utcnow()
         
-        # If order is confirmed, reduce inventory
-        if new_status == 'confirmed' and old_status == 'pending':
-            try:
-                InventoryService.reduce_inventory_for_order(order.items)
-                current_app.logger.info(f"Inventory reduced for confirmed order {order.order_number}")
-            except Exception as e:
-                current_app.logger.error(f"Failed to reduce inventory for order {order.order_number}: {str(e)}")
-                # Don't fail the order update, but log the error
-                # In a production system, you might want to implement compensation logic
-        
         # If order is confirmed, update all items to confirmed
         if new_status == 'confirmed':
             for item in order.items:
@@ -342,114 +331,6 @@ def update_order_item_status(order_id, item_id):
         return jsonify({
             'success': False,
             'message': f'Error updating order item status: {str(e)}'
-        }), 500
-
-@order_bp.route('/analytics', methods=['GET'])
-def get_order_analytics():
-    """Get order analytics and statistics"""
-    try:
-        # Get date range from query params
-        date_from = request.args.get('date_from')
-        date_to = request.args.get('date_to')
-        
-        if not date_from:
-            date_from = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        else:
-            date_from = datetime.fromisoformat(date_from)
-            
-        if not date_to:
-            date_to = datetime.utcnow()
-        else:
-            date_to = datetime.fromisoformat(date_to)
-        
-        # Base query for the date range
-        base_query = Order.query.filter(
-            Order.created_at >= date_from,
-            Order.created_at <= date_to
-        )
-        
-        # Calculate statistics
-        total_orders = base_query.count()
-        completed_orders = base_query.filter(Order.status == 'delivered').count()
-        cancelled_orders = base_query.filter(Order.status == 'cancelled').count()
-        active_orders = base_query.filter(Order.status.in_(['pending', 'confirmed', 'preparing'])).count()
-        
-        # Revenue statistics
-        revenue_query = base_query.filter(Order.status == 'delivered')
-        total_revenue = sum([float(order.final_amount) for order in revenue_query.all()])
-        
-        # Average order value
-        avg_order_value = total_revenue / completed_orders if completed_orders > 0 else 0
-        
-        # Orders by status
-        orders_by_status = {}
-        for status in ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled']:
-            count = base_query.filter(Order.status == status).count()
-            orders_by_status[status] = count
-        
-        # Popular items (top 10)
-        item_query = db.session.query(
-            OrderItem.menu_item_name,
-            db.func.sum(OrderItem.quantity).label('total_quantity'),
-            db.func.sum(OrderItem.total_price).label('total_revenue')
-        ).join(Order).filter(
-            Order.created_at >= date_from,
-            Order.created_at <= date_to,
-            Order.status != 'cancelled'
-        ).group_by(OrderItem.menu_item_name).order_by(
-            db.func.sum(OrderItem.quantity).desc()
-        ).limit(10)
-        
-        popular_items = []
-        for item_name, quantity, revenue in item_query.all():
-            popular_items.append({
-                'item_name': item_name,
-                'total_quantity': int(quantity),
-                'total_revenue': float(revenue)
-            })
-        
-        # Orders by hour (for today)
-        if date_from.date() == datetime.utcnow().date():
-            orders_by_hour = {}
-            for hour in range(24):
-                hour_start = date_from.replace(hour=hour)
-                hour_end = hour_start.replace(hour=hour + 1) if hour < 23 else date_to
-                
-                count = base_query.filter(
-                    Order.created_at >= hour_start,
-                    Order.created_at < hour_end
-                ).count()
-                
-                orders_by_hour[f"{hour:02d}:00"] = count
-        else:
-            orders_by_hour = {}
-        
-        return jsonify({
-            'success': True,
-            'data': {
-                'date_range': {
-                    'from': date_from.isoformat(),
-                    'to': date_to.isoformat()
-                },
-                'summary': {
-                    'total_orders': total_orders,
-                    'completed_orders': completed_orders,
-                    'cancelled_orders': cancelled_orders,
-                    'active_orders': active_orders,
-                    'total_revenue': round(total_revenue, 2),
-                    'average_order_value': round(avg_order_value, 2)
-                },
-                'orders_by_status': orders_by_status,
-                'popular_items': popular_items,
-                'orders_by_hour': orders_by_hour
-            }
-        })
-        
-    except Exception as e:
-        current_app.logger.error(f"Error getting order analytics: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': f'Error retrieving analytics: {str(e)}'
         }), 500
 
 @order_bp.route('/kitchen', methods=['GET'])

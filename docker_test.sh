@@ -77,7 +77,6 @@ wait_for_service "API Gateway" 3000
 wait_for_service "Menu Inventory" 3001
 wait_for_service "Order Management" 3002
 wait_for_service "Billing Payments" 3003
-wait_for_service "Analytics Reporting" 3004
 
 echo ""
 echo "5️⃣ Running API tests..."
@@ -95,7 +94,6 @@ echo "   • API Gateway: http://localhost:3000"
 echo "   • Menu Inventory: http://localhost:3001" 
 echo "   • Order Management: http://localhost:3002"
 echo "   • Billing Payments: http://localhost:3003"
-echo "   • Analytics Reporting: http://localhost:3004"
 echo "   • RabbitMQ Management: http://localhost:15672 (admin/password)"
 echo ""
 echo -e "${YELLOW}💡 Useful commands:${NC}"

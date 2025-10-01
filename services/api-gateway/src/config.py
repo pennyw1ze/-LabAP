@@ -9,7 +9,6 @@ class Config:
     MENU_SERVICE_URL = os.environ.get('MENU_SERVICE_URL', 'http://localhost:3001')
     ORDER_SERVICE_URL = os.environ.get('ORDER_SERVICE_URL', 'http://localhost:3002')
     BILLING_SERVICE_URL = os.environ.get('BILLING_SERVICE_URL', 'http://localhost:3003')
-    ANALYTICS_SERVICE_URL = os.environ.get('ANALYTICS_SERVICE_URL', 'http://localhost:3004')
     
     # Flask settings
     PORT = int(os.environ.get('PORT', 3000))
