@@ -57,7 +57,7 @@ services:
     networks:
       - byteristo-network
 
-  # Redis for Analytics and Caching
+  # Redis for caching
   redis:
     image: redis:6-alpine
     container_name: byteristo-redis
@@ -135,29 +135,6 @@ services:
     networks:
       - byteristo-network
 
-  # Analytics & Reporting Service
-  analytics-reporting-service:
-    build: ./services/analytics-reporting
-    container_name: byteristo-analytics-reporting
-    ports:
-      - "3004:3004"
-    environment:
-      - FLASK_ENV=development
-      - PORT=3004
-      - REDIS_URL=redis://redis:6379
-      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
-      - MENU_SERVICE_URL=http://menu-inventory-service:3001
-      - ORDER_SERVICE_URL=http://order-management-service:3002
-      - BILLING_SERVICE_URL=http://billing-payments-service:3003
-    depends_on:
-      - redis
-      - rabbitmq
-      - menu-inventory-service
-      - order-management-service
-      - billing-payments-service
-    networks:
-      - byteristo-network
-
   # API Gateway
   api-gateway:
     build: ./services/api-gateway
@@ -170,12 +147,10 @@ services:
       - MENU_SERVICE_URL=http://menu-inventory-service:3001
       - ORDER_SERVICE_URL=http://order-management-service:3002
       - BILLING_SERVICE_URL=http://billing-payments-service:3003
-      - ANALYTICS_SERVICE_URL=http://analytics-reporting-service:3004
     depends_on:
       - menu-inventory-service
       - order-management-service
       - billing-payments-service
-      - analytics-reporting-service
     networks:
       - byteristo-network
 

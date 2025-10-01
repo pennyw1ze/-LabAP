@@ -1,22 +1,21 @@
 # ByteRisto - Restaurant Management System
 
-ByteRisto is an internal Restaurant Management System offering an all-in-one solution for menu, inventory, ordering, billing, and analytics. Built with **Python Flask microservices**, Docker containerization, REST APIs, and message queues, with each service independently deployed. It supports staff from waiters to managers with role-based access control.
+ByteRisto is an internal Restaurant Management System offering an all-in-one solution for menu, ordering, and billing. Built with **Python Flask microservices**, Docker containerization, REST APIs, and message queues, with each service independently deployed. It supports staff from waiters to managers with role-based access control.
 
 ## 🏗️ Architecture
 
 ByteRisto follows a microservices architecture with the following key components:
 
 ### Core Services
-- **Menu & Inventory Service** (Port 3001) - Manages menu items and inventory tracking
+- **Menu Service** (Port 3001) - Manages menu items and availability
 - **Order Management Service** (Port 3002) - Handles order processing and workflow
 - **Billing & Payments Service** (Port 3003) - Manages billing and payment processing
-- **Analytics & Reporting Service** (Port 3004) - Provides business insights and reports
 
 ### Infrastructure
 - **API Gateway** (Port 3000) - Unified entry point for all services
 - **RabbitMQ** (Port 5672/15672) - Message queue for inter-service communication
 - **PostgreSQL** (Multiple instances) - Database per service pattern
-- **Redis** (Port 6379) - Caching and analytics data storage
+- **Redis** (Port 6379) - Caching and ephemeral data storage
 
 ## 🚀 Quick Start
 
@@ -63,18 +62,15 @@ ByteRisto follows a microservices architecture with the following key components
 | Service | URL | Documentation |
 |---------|-----|---------------|
 | API Gateway | http://localhost:3000 | http://localhost:3000/api-docs |
-| Menu & Inventory | http://localhost:3001 | http://localhost:3001/api-docs |
+| Menu | http://localhost:3001 | http://localhost:3001/api-docs |
 | Order Management | http://localhost:3002 | http://localhost:3002/api-docs |
 | Billing & Payments | http://localhost:3003 | http://localhost:3003/health |
-| Analytics & Reporting | http://localhost:3004 | http://localhost:3004/health |
 | RabbitMQ Management | http://localhost:15672 | admin/password |
 
 ## 📋 Features
 
-### Menu & Inventory Management
+### Menu Management
 - ✅ CRUD operations for menu items
-- ✅ Inventory tracking with stock levels
-- ✅ Low stock alerts
 - ✅ Category-based organization
 - ✅ Nutritional information tracking
 - ✅ Allergen management
@@ -92,12 +88,6 @@ ByteRisto follows a microservices architecture with the following key components
 - 🚧 Payment processing
 - 🚧 Receipt management
 - 🚧 Tax calculations
-
-### Analytics & Reporting
-- 🚧 Sales analytics
-- 🚧 Popular items tracking
-- 🚧 Performance metrics
-- 🚧 Revenue reports
 
 ### Infrastructure Features
 - ✅ Microservices architecture
@@ -166,14 +156,11 @@ ByteRisto supports different staff roles with appropriate access levels:
 ### Kitchen Staff
 - View pending orders
 - Update order preparation status
-- Access inventory information
 - Mark orders as ready
 
 ### Manager
 - Full access to all services
-- View analytics and reports
 - Manage menu items and pricing
-- Manage inventory and suppliers
 - Access billing information
 
 ### Administrator
@@ -191,20 +178,14 @@ The system uses RabbitMQ for asynchronous communication between services:
 - `order_updated` - Order status changed
 - `order_cancelled` - Order cancelled
 
-### Inventory Events
-- `inventory_update` - Stock levels changed
-- `low_stock_alert` - Stock below minimum threshold
-
 ### Billing Events
 - `billing_request` - Invoice generation requested
 - `payment_processed` - Payment completed
 
 ## 📊 Database Schema
 
-### Menu & Inventory Service
+### Menu Service
 - `menu_items` - Menu item information
-- `inventory_items` - Inventory tracking
-- `menu_item_inventory` - Many-to-many relationship
 
 ### Order Management Service
 - `orders` - Order information

@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
-from models import db, MenuItem, InventoryItem
+from models import db, MenuItem
 from sqlalchemy.exc import IntegrityError
 from marshmallow import Schema, fields, ValidationError
 import uuid
+import json
 
 menu_bp = Blueprint('menu', __name__)
 
@@ -127,8 +128,8 @@ def create_menu_item():
             category=data['category'],
             is_available=data.get('is_available', True),
             preparation_time=data['preparation_time'],
-            allergens=data.get('allergens'),
-            nutritional_info=data.get('nutritional_info')
+            allergens=json.dumps(data.get('allergens')) if data.get('allergens') is not None else None,
+            nutritional_info=json.dumps(data.get('nutritional_info')) if data.get('nutritional_info') is not None else None
         )
         
         db.session.add(menu_item)
@@ -188,7 +189,11 @@ def update_menu_item(menu_id):
         
         # Update menu item fields
         for key, value in data.items():
-            if hasattr(menu_item, key):
+            if key == 'allergens':
+                setattr(menu_item, key, json.dumps(value) if value is not None else None)
+            elif key == 'nutritional_info':
+                setattr(menu_item, key, json.dumps(value) if value is not None else None)
+            elif hasattr(menu_item, key):
                 setattr(menu_item, key, value)
         
         db.session.commit()
@@ -234,10 +239,6 @@ def delete_menu_item(menu_id):
                 'success': False,
                 'message': 'Menu item not found'
             }), 404
-
-        # Ensure ingredient relationships are cleared to avoid FK constraint errors
-        menu_item.ingredients = []
-        db.session.flush()
 
         db.session.delete(menu_item)
         db.session.commit()

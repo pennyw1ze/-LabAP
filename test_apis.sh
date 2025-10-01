@@ -81,40 +81,12 @@ if [ "$MENU_ITEM_ID" != "null" ] && [ -n "$MENU_ITEM_ID" ]; then
 fi
 
 echo ""
-echo "Testing Inventory Service (Direct)"
-echo "-------------------------------------"
-
-# Test inventory service
-test_endpoint "GET" "$MENU_URL/api/inventory/" "" "200" "Get all inventory items"
-test_endpoint "GET" "$MENU_URL/api/inventory/alerts" "" "200" "Get inventory alerts"
-
-# Create an inventory item
-INVENTORY_RESPONSE=$(test_endpoint "POST" "$MENU_URL/api/inventory/" '{
-    "name": "Mozzarella Cheese",
-    "description": "Fresh mozzarella for pizzas",
-    "current_stock": 50.0,
-    "minimum_stock": 10.0,
-    "maximum_stock": 100.0,
-    "unit": "kg",
-    "cost_per_unit": 8.50,
-    "supplier": "Local Dairy Farm",
-    "is_perishable": true
-}' "201" "Create inventory item")
-
-INVENTORY_ID=$(echo "$INVENTORY_RESPONSE" | jq -r '.data.id' 2>/dev/null)
-
-if [ "$INVENTORY_ID" != "null" ] && [ -n "$INVENTORY_ID" ]; then
-    test_endpoint "GET" "$MENU_URL/api/inventory/$INVENTORY_ID" "" "200" "Get specific inventory item"
-fi
-
-echo ""
 echo "Testing API Gateway (Menu Proxy)"
 echo "-----------------------------------"
 
 # Test API Gateway proxying menu service
 test_endpoint "GET" "$GATEWAY_URL/api/menu/" "" "200" "Gateway: Get menu items"
 test_endpoint "GET" "$GATEWAY_URL/api/menu/available" "" "200" "Gateway: Get available menu items"
-test_endpoint "GET" "$GATEWAY_URL/api/inventory/" "" "200" "Gateway: Get inventory items"
 
 if [ "$MENU_ITEM_ID" != "null" ] && [ -n "$MENU_ITEM_ID" ]; then
     test_endpoint "GET" "$GATEWAY_URL/api/menu/$MENU_ITEM_ID" "" "200" "Gateway: Get specific menu item"
@@ -124,7 +96,7 @@ echo ""
 echo "API Testing Summary"
 echo "====================="
 echo -e "${GREEN}✓${NC} ByteRisto Flask microservices are working!"
-echo -e "${YELLOW}ℹ${NC}  Menu & Inventory Service: $MENU_URL"
+echo -e "${YELLOW}ℹ${NC}  Menu Service: $MENU_URL"
 echo -e "${YELLOW}ℹ${NC}  API Gateway: $GATEWAY_URL"
 echo ""
 echo "Available Endpoints:"
@@ -134,12 +106,6 @@ echo "    POST   $MENU_URL/api/menu/         - Create menu item"
 echo "    GET    $MENU_URL/api/menu/{id}     - Get menu item by ID"
 echo "    GET    $MENU_URL/api/menu/available - Get available items"
 echo "  "
-echo "  Inventory Service:"
-echo "    GET    $MENU_URL/api/inventory/     - Get all inventory items"
-echo "    POST   $MENU_URL/api/inventory/     - Create inventory item"
-echo "    GET    $MENU_URL/api/inventory/{id} - Get inventory item by ID"
-echo "    GET    $MENU_URL/api/inventory/alerts - Get inventory alerts"
-echo "  "
 echo "  API Gateway (proxies all services):"
 echo "    All above endpoints via: $GATEWAY_URL/api/..."
 echo ""
@@ -148,9 +114,4 @@ if [ "$MENU_ITEM_ID" != "null" ] && [ -n "$MENU_ITEM_ID" ]; then
     echo "Sample Data Created:"
     echo "  Menu Item ID: $MENU_ITEM_ID"
     echo "  Try: curl $MENU_URL/api/menu/$MENU_ITEM_ID"
-fi
-
-if [ "$INVENTORY_ID" != "null" ] && [ -n "$INVENTORY_ID" ]; then
-    echo "  Inventory Item ID: $INVENTORY_ID"  
-    echo "  Try: curl $MENU_URL/api/inventory/$INVENTORY_ID"
 fi

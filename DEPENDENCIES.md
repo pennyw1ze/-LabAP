@@ -14,17 +14,13 @@
 - psycopg2-binary==2.9.7 (PostgreSQL adapter - menu-inventory, order-management, billing-payments)
 
 ## Message Queue:
-- pika==1.3.2 (RabbitMQ client - order-management, billing-payments, analytics-reporting)
+- pika==1.3.2 (RabbitMQ client - order-management, billing-payments)
 
 ## Caching:
-- redis==4.6.0 (Redis client - menu-inventory, analytics-reporting)
+- redis==4.6.0 (Redis client - menu-inventory)
 
 ## HTTP Client:
-- requests==2.31.0 (HTTP library - order-management, billing-payments, analytics-reporting, api-gateway)
-
-## Analytics:
-- pandas==2.0.3 (Data analysis - analytics-reporting)
-- numpy==1.24.3 (Numerical computing - analytics-reporting)
+- requests==2.31.0 (HTTP library - order-management, billing-payments, api-gateway)
 
 ## Documentation:
 - flask-swagger-ui==4.11.1 (Swagger UI - menu-inventory)
@@ -33,5 +29,4 @@
 ✅ menu-inventory: Complete
 ✅ order-management: Complete  
 ✅ billing-payments: Complete
-✅ analytics-reporting: Complete
 ✅ api-gateway: Complete

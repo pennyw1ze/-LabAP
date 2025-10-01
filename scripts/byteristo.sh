@@ -32,10 +32,9 @@ start_services() {
     echo -e "${BLUE}📋 Service URLs:${NC}"
     echo -e "   🌐 API Gateway:      http://localhost:3000"
     echo -e "   📚 API Docs:         http://localhost:3000/api-docs"
-    echo -e "   🍽️  Menu & Inventory: http://localhost:3001"
+    echo -e "   🍽️  Menu Service:     http://localhost:3001"
     echo -e "   📋 Order Management: http://localhost:3002"
     echo -e "   💳 Billing:          http://localhost:3003"
-    echo -e "   📊 Analytics:        http://localhost:3004"
     echo -e "   🐰 RabbitMQ:         http://localhost:15672 (admin/password)"
 }
 
@@ -55,7 +54,6 @@ check_health() {
         "Menu Service:http://localhost:3001/health"
         "Order Service:http://localhost:3002/health"
         "Billing Service:http://localhost:3003/health"
-        "Analytics Service:http://localhost:3004/health"
     )
     
     for service in "${services[@]}"; do
@@ -93,7 +91,7 @@ setup_dev() {
     echo -e "${YELLOW}🛠️  Setting up development environment...${NC}"
     
     # Install dependencies for each service
-    services=("menu-inventory" "order-management" "billing-payments" "analytics-reporting" "api-gateway")
+    services=("menu-inventory" "order-management" "billing-payments" "api-gateway")
     
     for service in "${services[@]}"; do
         if [ -d "services/$service" ]; then
