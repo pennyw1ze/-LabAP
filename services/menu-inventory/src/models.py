@@ -7,8 +7,8 @@ db = SQLAlchemy()
 
 # Association table for menu items and inventory items (many-to-many)
 menu_inventory_association = db.Table('menu_inventory_items',
-    db.Column('menu_item_id', UUID(as_uuid=True), db.ForeignKey('menu_items.id'), primary_key=True),
-    db.Column('inventory_item_id', UUID(as_uuid=True), db.ForeignKey('inventory_items.id'), primary_key=True),
+    db.Column('menu_item_id', UUID(as_uuid=True), db.ForeignKey('menu_items.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('inventory_item_id', UUID(as_uuid=True), db.ForeignKey('inventory_items.id', ondelete='CASCADE'), primary_key=True),
     db.Column('quantity', db.Float, nullable=False),
     db.Column('unit', db.String(20), nullable=False)
 )
@@ -29,9 +29,10 @@ class MenuItem(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Many-to-many relationship with InventoryItem
-    ingredients = db.relationship('InventoryItem', 
-                                secondary=menu_inventory_association, 
-                                backref=db.backref('menu_items', lazy='dynamic'))
+    ingredients = db.relationship('InventoryItem',
+                                secondary=menu_inventory_association,
+                                backref=db.backref('menu_items', lazy='dynamic', passive_deletes=True),
+                                passive_deletes=True)
 
     def to_dict(self):
         return {
