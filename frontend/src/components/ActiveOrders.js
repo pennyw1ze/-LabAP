@@ -10,29 +10,28 @@ export default function ActiveOrders() {
 
   useEffect(() => {
     loadOrders();
-    
+
     let interval;
     if (autoRefresh) {
-      interval = setInterval(loadOrders, 30000); // Refresh ogni 30 secondi
+      interval = setInterval(loadOrders, 30000);
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
     };
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, selectedTable, autoRefresh]);
 
   const loadOrders = async () => {
     try {
       const filters = {};
-      
+
       if (filter === 'active') {
-        filters.status = 'active'; // Questo è gestito nel backend come pending, confirmed, preparing
+        filters.status = 'active';
       } else if (filter !== 'all') {
         filters.status = filter;
       }
-      
+
       if (selectedTable) {
         filters.table_number = selectedTable;
       }
@@ -49,7 +48,7 @@ export default function ActiveOrders() {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus);
-      loadOrders(); // Refresh orders
+      loadOrders();
     } catch (error) {
       console.error('Error updating order status:', error);
       alert('Errore nell\'aggiornamento dello stato: ' + error.message);
@@ -58,34 +57,39 @@ export default function ActiveOrders() {
 
   const getStatusColor = (status) => {
     const colors = {
-      'pending': '#ff9800',
-      'confirmed': '#2196f3',
-      'preparing': '#ff5722',
-      'ready': '#4caf50',
-      'delivered': '#9e9e9e',
-      'cancelled': '#f44336'
+      pending: '#ff9f0a',
+      confirmed: '#0a84ff',
+      preparing: '#ff5722',
+      ready: '#34c759',
+      delivered: '#8e8e93',
+      cancelled: '#ff453a'
     };
-    return colors[status] || '#9e9e9e';
+    return colors[status] || '#8e8e93';
+  };
+
+  const hexToRgba = (hex, alpha = 1) => {
+    const sanitized = hex.replace('#', '');
+    const value = sanitized.length === 3
+      ? sanitized.split('').map((c) => c + c).join('')
+      : sanitized;
+    const intVal = parseInt(value, 16);
+    const r = (intVal >> 16) & 255;
+    const g = (intVal >> 8) & 255;
+    const b = intVal & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
 
   const getStatusActions = (order) => {
     const actions = [];
-    
+
     switch (order.status) {
       case 'pending':
         actions.push(
           <button
             key="confirm"
+            type="button"
+            className="button-glass button-glass--primary"
             onClick={() => handleStatusUpdate(order.id, 'confirmed')}
-            style={{
-              backgroundColor: '#2196f3',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginRight: '8px'
-            }}
           >
             ✅ Conferma
           </button>
@@ -93,44 +97,32 @@ export default function ActiveOrders() {
         actions.push(
           <button
             key="cancel"
+            type="button"
+            className="button-glass button-glass--danger"
             onClick={() => handleStatusUpdate(order.id, 'cancelled')}
-            style={{
-              backgroundColor: '#f44336',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
           >
             ❌ Annulla
           </button>
         );
         break;
-      
+
       case 'ready':
         actions.push(
           <button
             key="deliver"
+            type="button"
+            className="button-glass button-glass--success"
             onClick={() => handleStatusUpdate(order.id, 'delivered')}
-            style={{
-              backgroundColor: '#4caf50',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
           >
             📦 Consegna
           </button>
         );
         break;
 
-        default:
+      default:
         break;
     }
-    
+
     return actions;
   };
 
@@ -139,343 +131,226 @@ export default function ActiveOrders() {
     return tables.sort((a, b) => a - b);
   };
 
-  const filteredOrders = orders.filter(order => 
+  const filteredOrders = orders.filter(order =>
     !selectedTable || order.table_number.toString() === selectedTable
   );
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '20px' }}>Caricamento ordini...</div>;
+    return <div className="glass-card loading-panel">Caricamento ordini...</div>;
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-      {/* Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '20px',
-        padding: '15px',
-        backgroundColor: '#f8f9fa',
-        borderRadius: '8px'
-      }}>
-        <h2 style={{ margin: 0 }}>📋 Gestione Ordini</h2>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+    <div className="active-orders">
+      <section className="glass-card active-orders__header">
+        <div className="active-orders__title">
+          <h2>📋 Gestione Ordini</h2>
+          <span className="text-muted">Panoramica degli ordini in tempo reale con stile Liquid Glass.</span>
+        </div>
+
+        <div className="active-orders__actions">
+          <label className="availability-toggle">
             <input
               type="checkbox"
               checked={autoRefresh}
               onChange={(e) => setAutoRefresh(e.target.checked)}
             />
-            Auto-refresh
+            <span className="availability-toggle__slider" />
+            <span className="availability-toggle__label">Auto-refresh</span>
           </label>
-          
-          <button 
+
+          <button
+            type="button"
+            className="button-glass button-glass--primary"
             onClick={loadOrders}
-            style={{
-              backgroundColor: '#0984e3',
-              color: 'white',
-              border: 'none',
-              padding: '8px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
           >
             🔄 Aggiorna
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* Filters */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '15px', 
-        marginBottom: '20px',
-        flexWrap: 'wrap',
-        alignItems: 'center'
-      }}>
-        <div>
-          <label style={{ marginRight: '8px', fontWeight: 'bold' }}>Stato:</label>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            style={{
-              padding: '6px 10px',
-              borderRadius: '4px',
-              border: '1px solid #ddd'
-            }}
-          >
-            <option value="all">Tutti gli ordini</option>
-            <option value="active">Ordini attivi</option>
-            <option value="pending">In attesa</option>
-            <option value="confirmed">Confermati</option>
-            <option value="preparing">In preparazione</option>
-            <option value="ready">Pronti</option>
-            <option value="delivered">Consegnati</option>
-          </select>
-        </div>
+      <section className="glass-card active-orders__filters">
+        <div className="active-orders__filters-row">
+          <div className="form-field form-field--compact">
+            <label className="form-label" htmlFor="order-status-filter">
+              Stato
+            </label>
+            <select
+              id="order-status-filter"
+              className="select-glass"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="all">Tutti gli ordini</option>
+              <option value="active">Ordini attivi</option>
+              <option value="pending">In attesa</option>
+              <option value="confirmed">Confermati</option>
+              <option value="preparing">In preparazione</option>
+              <option value="ready">Pronti</option>
+              <option value="delivered">Consegnati</option>
+              <option value="cancelled">Annullati</option>
+            </select>
+          </div>
 
-        <div>
-          <label style={{ marginRight: '8px', fontWeight: 'bold' }}>Tavolo:</label>
-          <select
-            value={selectedTable}
-            onChange={(e) => setSelectedTable(e.target.value)}
-            style={{
-              padding: '6px 10px',
-              borderRadius: '4px',
-              border: '1px solid #ddd'
-            }}
-          >
-            <option value="">Tutti i tavoli</option>
-            {getUniqueTableNumbers().map(table => (
-              <option key={table} value={table}>Tavolo {table}</option>
-            ))}
-          </select>
-        </div>
+          <div className="form-field form-field--compact">
+            <label className="form-label" htmlFor="table-filter">
+              Tavolo
+            </label>
+            <select
+              id="table-filter"
+              className="select-glass"
+              value={selectedTable}
+              onChange={(e) => setSelectedTable(e.target.value)}
+            >
+              <option value="">Tutti i tavoli</option>
+              {getUniqueTableNumbers().map(table => (
+                <option key={table} value={table}>Tavolo {table}</option>
+              ))}
+            </select>
+          </div>
 
-        <div style={{ 
-          fontSize: '0.9em', 
-          color: '#666',
-          marginLeft: 'auto'
-        }}>
-          {filteredOrders.length} ordini trovati
+          <span className="active-orders__count">{filteredOrders.length} ordini trovati</span>
         </div>
-      </div>
+      </section>
 
-      {/* Orders List */}
-      {filteredOrders.length === 0 ? (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '60px', 
-          backgroundColor: '#f8f9fa', 
-          borderRadius: '8px',
-          color: '#666'
-        }}>
-          <div style={{ fontSize: '2em', marginBottom: '15px' }}>📋</div>
-          <h3>Nessun ordine trovato</h3>
-          <p>
-            {filter === 'active' ? 
-              'Non ci sono ordini attivi al momento' : 
-              'Prova a cambiare i filtri per vedere altri ordini'
-            }
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          {filteredOrders.map((order) => {
-            const timing = calculateOrderTiming(order.created_at, order.estimated_completion_time);
-            
-            return (
-              <div 
-                key={order.id}
-                style={{ 
-                  border: `2px solid ${getStatusColor(order.status)}`,
-                  borderRadius: '8px', 
-                  backgroundColor: 'white',
-                  boxShadow: timing.isOverdue ? '0 4px 8px rgba(244, 67, 54, 0.2)' : '0 2px 4px rgba(0,0,0,0.1)'
-                }}
-              >
-                {/* Order Header */}
-                <div style={{ 
-                  backgroundColor: getStatusColor(order.status),
-                  color: 'white',
-                  padding: '15px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '1.2em', fontWeight: 'bold' }}>
-                      {order.order_number}
-                    </div>
-                    <div style={{ fontSize: '0.9em', opacity: 0.9 }}>
-                      {formatOrderStatus(order.status)} • {formatOrderType(order.order_type)}
-                    </div>
-                  </div>
-                  
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.1em', fontWeight: 'bold' }}>
-                      Tavolo {order.table_number}
-                    </div>
-                    {order.customer_name && (
-                      <div style={{ fontSize: '0.9em', opacity: 0.9 }}>
-                        {order.customer_name}
-                      </div>
-                    )}
-                  </div>
+      <div className="active-orders__list">
+        {filteredOrders.length === 0 && (
+          <div className="empty-state">
+            <span role="img" aria-label="clipboard">📋</span>
+            {filter === 'active'
+              ? 'Non ci sono ordini attivi al momento.'
+              : 'Prova a cambiare i filtri per visualizzare altri ordini.'}
+          </div>
+        )}
+
+        {filteredOrders.map((order) => {
+          const accentColor = getStatusColor(order.status);
+          const timing = calculateOrderTiming(order.created_at, order.estimated_completion_time);
+          const cardStyle = {
+            border: `1px solid ${hexToRgba(accentColor, 0.45)}`,
+            boxShadow: `0 24px 38px -28px ${hexToRgba(accentColor, 0.55)}`
+          };
+          const headerStyle = {
+            background: `linear-gradient(135deg, ${hexToRgba(accentColor, 0.65)}, ${hexToRgba(accentColor, 0.35)})`
+          };
+
+          return (
+            <article key={order.id} className="glass-card active-orders__card" style={cardStyle}>
+              <header className="active-orders__card-header" style={headerStyle}>
+                <div className="active-orders__card-meta">
+                  <strong className="active-orders__order-number">{order.order_number}</strong>
+                  <span>{formatOrderStatus(order.status)} • {formatOrderType(order.order_type)}</span>
                 </div>
+                <div className="active-orders__card-meta active-orders__card-meta--right">
+                  <span className="status-badge">Tavolo {order.table_number}</span>
+                  {order.customer_name && (
+                    <span>{order.customer_name}</span>
+                  )}
+                </div>
+              </header>
 
-                {/* Timing Info */}
-                <div style={{ 
-                  padding: '10px 15px',
-                  backgroundColor: timing.isOverdue ? '#ffebee' : '#f8f9fa',
-                  borderBottom: '1px solid #eee',
-                  fontSize: '0.9em'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>
-                      Ordinato {timing.elapsedMinutes} min fa • {new Date(order.created_at).toLocaleTimeString('it-IT')}
+              <div className="active-orders__card-body">
+                <div className={`active-orders__timing ${timing.isOverdue ? 'active-orders__timing--overdue' : ''}`}>
+                  <span>
+                    Ordinato {timing.elapsedMinutes} min fa • {new Date(order.created_at).toLocaleTimeString('it-IT')}
+                  </span>
+                  {timing.estimatedRemainingMinutes !== null && (
+                    <span className={timing.isOverdue ? 'overdue' : 'text-muted'}>
+                      {timing.isOverdue
+                        ? `In ritardo di ${Math.abs(timing.estimatedRemainingMinutes)} min`
+                        : `Stima: ${timing.estimatedRemainingMinutes} min`}
                     </span>
-                    
-                    {timing.estimatedRemainingMinutes !== null && (
-                      <span style={{ 
-                        color: timing.isOverdue ? '#f44336' : '#666',
-                        fontWeight: timing.isOverdue ? 'bold' : 'normal'
-                      }}>
-                        {timing.isOverdue ? 
-                          `In ritardo di ${Math.abs(timing.estimatedRemainingMinutes)} min` :
-                          `Stima: ${timing.estimatedRemainingMinutes} min`
-                        }
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
 
-                {/* Order Items */}
-                <div style={{ padding: '15px' }}>
-                  <div style={{ marginBottom: '10px' }}>
-                    <strong>Piatti ({order.items.length}):</strong>
-                  </div>
-                  
-                  <div style={{ display: 'grid', gap: '8px' }}>
+                <div>
+                  <strong>Piatti ({order.items.length})</strong>
+                  <div className="active-orders__items">
                     {order.items.map((item, index) => (
-                      <div key={index} style={{ 
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '8px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '4px'
-                      }}>
+                    <div key={index} className="active-orders__item">
                         <div>
-                          <span style={{ fontWeight: 'bold' }}>
-                            {item.quantity}x {item.menu_item_name}
+                          <span className="active-orders__item-name">
+                            {item.quantity}× {item.menu_item_name}
                           </span>
                           {item.special_instructions && (
-                            <div style={{ 
-                              fontSize: '0.8em', 
-                              color: '#666',
-                              marginTop: '2px'
-                            }}>
-                              📝 {item.special_instructions}
-                            </div>
+                            <span className="active-orders__item-notes">📝 {item.special_instructions}</span>
                           )}
                         </div>
-                        
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontWeight: 'bold' }}>
-                            €{item.total_price}
-                          </div>
-                          <div style={{ 
-                            fontSize: '0.8em',
-                            color: getStatusColor(item.status),
-                            fontWeight: 'bold'
-                          }}>
+                        <div className="active-orders__item-price">
+                          <span>€{item.total_price}</span>
+                          <span className="active-orders__item-status" style={{ color: getStatusColor(item.status) }}>
                             {formatOrderStatus(item.status)}
-                          </div>
+                          </span>
                         </div>
                       </div>
                     ))}
                   </div>
+                </div>
 
-                  {/* Order Notes */}
-                  {order.special_instructions && (
-                    <div style={{ 
-                      marginTop: '15px',
-                      padding: '10px',
-                      backgroundColor: '#e3f2fd',
-                      border: '1px solid #2196f3',
-                      borderRadius: '4px'
-                    }}>
-                      <strong>📋 Note Ordine:</strong>
-                      <div style={{ marginTop: '4px' }}>{order.special_instructions}</div>
-                    </div>
+                {order.special_instructions && (
+                  <div className="active-orders__items active-orders__notes">
+                    <strong>📋 Note Ordine</strong>
+                    <span className="text-muted">{order.special_instructions}</span>
+                  </div>
+                )}
+              </div>
+
+              <footer className="active-orders__footer">
+                <div>
+                  <div className="active-orders__footer-total">Totale: €{order.final_amount}</div>
+                  {order.tax_amount > 0 && (
+                    <span className="text-muted">(IVA: €{order.tax_amount})</span>
                   )}
                 </div>
-
-                {/* Order Footer */}
-                <div style={{ 
-                  padding: '15px',
-                  borderTop: '1px solid #eee',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '1.1em', fontWeight: 'bold' }}>
-                      Totale: €{order.final_amount}
-                    </div>
-                    {order.tax_amount > 0 && (
-                      <div style={{ fontSize: '0.8em', color: '#666' }}>
-                        (di cui IVA: €{order.tax_amount})
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {getStatusActions(order)}
-                  </div>
+                <div className="active-orders__actions">
+                  {getStatusActions(order)}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              </footer>
+            </article>
+          );
+        })}
+      </div>
 
-      {/* Summary Stats */}
-      <div style={{ 
-        marginTop: '30px',
-        padding: '20px',
-        backgroundColor: '#f8f9fa',
-        borderRadius: '8px'
-      }}>
+      <section className="glass-card active-orders__summary">
         <h3>📊 Riepilogo</h3>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
-          gap: '16px',
-          textAlign: 'center'
-        }}>
-          <div>
-            <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#ff9800' }}>
+        <div className="active-orders__summary-grid">
+          <div className="active-orders__summary-card">
+            <div className="active-orders__summary-value">
               {orders.filter(o => o.status === 'pending').length}
             </div>
-            <div style={{ color: '#666', fontSize: '0.9em' }}>In Attesa</div>
+            <div className="active-orders__summary-label">In Attesa</div>
           </div>
-          <div>
-            <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#2196f3' }}>
+          <div className="active-orders__summary-card">
+            <div className="active-orders__summary-value">
               {orders.filter(o => o.status === 'confirmed').length}
             </div>
-            <div style={{ color: '#666', fontSize: '0.9em' }}>Confermati</div>
+            <div className="active-orders__summary-label">Confermati</div>
           </div>
-          <div>
-            <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#ff5722' }}>
+          <div className="active-orders__summary-card">
+            <div className="active-orders__summary-value">
               {orders.filter(o => o.status === 'preparing').length}
             </div>
-            <div style={{ color: '#666', fontSize: '0.9em' }}>In Preparazione</div>
+            <div className="active-orders__summary-label">In Preparazione</div>
           </div>
-          <div>
-            <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#4caf50' }}>
+          <div className="active-orders__summary-card">
+            <div className="active-orders__summary-value">
               {orders.filter(o => o.status === 'ready').length}
             </div>
-            <div style={{ color: '#666', fontSize: '0.9em' }}>Pronti</div>
+            <div className="active-orders__summary-label">Pronti</div>
           </div>
-          <div>
-            <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#9e9e9e' }}>
+          <div className="active-orders__summary-card">
+            <div className="active-orders__summary-value">
               {orders.filter(o => o.status === 'delivered').length}
             </div>
-            <div style={{ color: '#666', fontSize: '0.9em' }}>Consegnati</div>
+            <div className="active-orders__summary-label">Consegnati</div>
           </div>
-          <div>
-            <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#0984e3' }}>
+          <div className="active-orders__summary-card">
+            <div className="active-orders__summary-value">
               €{orders.reduce((total, order) => total + parseFloat(order.final_amount), 0).toFixed(2)}
             </div>
-            <div style={{ color: '#666', fontSize: '0.9em' }}>Totale Vendite</div>
+            <div className="active-orders__summary-label">Totale Vendite</div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

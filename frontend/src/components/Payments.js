@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getPayments, makePayment } from "../api";
+import { getPayments } from "../api";
 
 export default function Payments() {
   const [payments, setPayments] = useState([]);
@@ -7,7 +7,6 @@ export default function Payments() {
   useEffect(() => {
     getPayments()
       .then(data => {
-        // Controllo della struttura dei dati
         if (Array.isArray(data)) {
           setPayments(data);
         } else if (data.payments && Array.isArray(data.payments)) {
@@ -20,28 +19,27 @@ export default function Payments() {
       .catch(err => console.error(err));
   }, []);
 
-  const handlePayment = async (payment) => {
-    try {
-      const result = await makePayment(payment);
-      setPayments(prev => [...prev, result]);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   return (
-    <div>
-      <h2>Payments</h2>
-      <button onClick={() => handlePayment({ orderId: "example-id", amount: 20 })}>
-        Make Payment
-      </button>
-      <ul className="order-list">
-        {payments.map(p => (
-          <li key={p.id}>
-            Order {p.orderId} - ${p.amount} - {p.status}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <section className="payments">
+      <div>
+        <h2>💳 Pagamenti</h2>
+          <span className="text-muted">Genera i pagamenti per i tuoi ordini</span>
+      </div>
+
+      {payments.length === 0 ? (
+        <div className="empty-state">Nessun ordine da saldare</div>
+      ) : (
+        <ul className="payments__list">
+          {payments.map((payment) => (
+            <li key={payment.id || payment._id || payment.orderId} className="payments__item">
+              <span>
+                Ordine {payment.orderId || payment.order_id} · €{payment.amount} · {payment.status}
+              </span>
+              {payment.method && <span className="text-muted">Metodo: {payment.method}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

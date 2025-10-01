@@ -47,6 +47,17 @@ export default function MenuManagement() {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState(getInitialFormState());
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const categories = ['all', 'appetizer', 'main', 'dessert', 'beverage', 'side'];
+  const categoryLabels = {
+    all: 'Tutti',
+    appetizer: 'Antipasti',
+    main: 'Primi Piatti',
+    dessert: 'Dolci',
+    beverage: 'Bevande',
+    side: 'Contorni'
+  };
 
   useEffect(() => {
     loadData();
@@ -134,7 +145,7 @@ export default function MenuManagement() {
       await loadData();
     } catch (error) {
       console.error('Error deleting menu item:', error);
-      alert('Errore durante l\'eliminazione del piatto');
+      alert("Errore durante l'eliminazione del piatto");
     }
   };
 
@@ -148,7 +159,7 @@ export default function MenuManagement() {
       }
     } catch (error) {
       console.error('Error updating availability:', error);
-      alert('Errore nell\'aggiornamento della disponibilità');
+      alert("Errore nell'aggiornamento della disponibilità");
     }
   };
 
@@ -171,283 +182,264 @@ export default function MenuManagement() {
     }
   };
 
+  const renderNutritionalFields = () => (
+    <div className="menu-management__nutrition-grid">
+      {['calories', 'protein', 'carbs', 'fat'].map((field) => (
+        <div key={field} className="form-field">
+          <label className="form-label" htmlFor={`nutritional-${field}`}>
+            {field === 'calories' ? 'Calorie (kcal)' : `${field.charAt(0).toUpperCase()}${field.slice(1)} (g)`}
+          </label>
+          <input
+            id={`nutritional-${field}`}
+            type="number"
+            className="input-glass"
+            name={`nutritional_info.${field}`}
+            value={formData.nutritional_info[field]}
+            onChange={handleInputChange}
+            min="0"
+            step={field === 'calories' ? '1' : '0.1'}
+          />
+        </div>
+      ))}
+    </div>
+  );
+
+  const filteredMenuItems = selectedCategory === 'all'
+    ? menuItems
+    : menuItems.filter(item => item.category === selectedCategory);
+
   if (loading) {
-    return <div>Caricamento...</div>;
+    return <div className="glass-card loading-panel">Caricamento dati menu...</div>;
   }
 
   return (
-    <div>
-      <h2>Gestione Menu</h2>
-
-      <div style={{ marginBottom: '20px' }}>
-        <button 
-          onClick={() => {
-            if (showAddForm) {
-              resetForm();
-            } else {
-              setEditingItem(null);
-              setFormData(getInitialFormState());
-              setShowAddForm(true);
-            }
-          }}
-          style={{
-            backgroundColor: '#00b894',
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          {showAddForm ? (editingItem ? 'Annulla Modifica' : 'Annulla') : 'Aggiungi Piatto'}
-        </button>
-      </div>
-
-      {/* Add Menu Item Form */}
-      {showAddForm && (
-        <form onSubmit={handleSubmit} style={{ 
-          backgroundColor: '#f8f9fa', 
-          padding: '20px', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
-        }}>
-          <h3>{editingItem ? `Modifica: ${editingItem.name}` : 'Nuovo Piatto'}</h3>
-          
-          {/* Basic Info */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '15px' }}>
-            <input
-              type="text"
-              name="name"
-              placeholder="Nome del piatto"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-            />
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="appetizer">Antipasto</option>
-              <option value="main">Primo Piatto</option>
-              <option value="dessert">Dolce</option>
-              <option value="beverage">Bevanda</option>
-              <option value="side">Contorno</option>
-            </select>
-            <input
-              type="number"
-              name="price"
-              placeholder="Prezzo (€)"
-              value={formData.price}
-              onChange={handleInputChange}
-              min="0"
-              step="0.01"
-              required
-            />
-            <input
-              type="number"
-              name="preparation_time"
-              placeholder="Tempo preparazione (min)"
-              value={formData.preparation_time}
-              onChange={handleInputChange}
-              min="1"
-              required
-            />
-          </div>
-
-          <textarea
-            name="description"
-            placeholder="Descrizione del piatto"
-            value={formData.description}
-            onChange={handleInputChange}
-            style={{ width: '100%', marginBottom: '15px', minHeight: '60px' }}
-          />
-
-          <input
-            type="text"
-            name="allergens"
-            placeholder="Allergeni (separati da virgola)"
-            value={formData.allergens}
-            onChange={handleInputChange}
-            style={{ width: '100%', marginBottom: '15px' }}
-          />
-
-          {/* Nutritional Info */}
-          <h4>Informazioni Nutrizionali (opzionali)</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '15px' }}>
-            <input
-              type="number"
-              name="nutritional_info.calories"
-              placeholder="Calorie"
-              value={formData.nutritional_info.calories}
-              onChange={handleInputChange}
-              min="0"
-            />
-            <input
-              type="number"
-              name="nutritional_info.protein"
-              placeholder="Proteine (g)"
-              value={formData.nutritional_info.protein}
-              onChange={handleInputChange}
-              min="0"
-              step="0.1"
-            />
-            <input
-              type="number"
-              name="nutritional_info.carbs"
-              placeholder="Carboidrati (g)"
-              value={formData.nutritional_info.carbs}
-              onChange={handleInputChange}
-              min="0"
-              step="0.1"
-            />
-            <input
-              type="number"
-              name="nutritional_info.fat"
-              placeholder="Grassi (g)"
-              value={formData.nutritional_info.fat}
-              onChange={handleInputChange}
-              min="0"
-              step="0.1"
-            />
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <AvailabilityToggle
-              id={editingItem ? `menu-availability-${editingItem.id}` : 'menu-availability-new'}
-              checked={formData.is_available}
-              onChange={handleInputChange}
-              labelOn="Disponibile per gli ordini"
-              labelOff="Non disponibile"
-            />
-          </div>
-
-          {/* Ingredient Selection Note */}
-          <div style={{ 
-            backgroundColor: '#e3f2fd', 
-            padding: '10px', 
-            borderRadius: '4px', 
-            marginBottom: '15px',
-            fontSize: '0.9em'
-          }}>
-            <strong>📝 Nota:</strong> Imposta la disponibilità del piatto con l'interruttore qui sopra.
-            La gestione dettagliata degli ingredienti può essere effettuata separatamente tramite API dedicate.
-          </div>
-
+    <div className="menu-management menu-management--legacy">
+      <section className="menu-management__panel menu-management__panel--legacy">
+        <div className="menu-management__header">
           <div>
-            <button type="submit" style={{
-              backgroundColor: '#0984e3',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginRight: '10px'
-            }}>
-              {editingItem ? 'Salva Modifiche' : 'Salva Piatto'}
+            <h2>🛠️ Gestione Menu</h2>
+            <span className="text-muted">Aggiungi, modifica o rimuovi i piatti dal menu in un flusso unico.</span>
+          </div>
+          <div className="menu-management__filters">
+            <button
+              type="button"
+              className="button-glass button-glass--primary"
+              onClick={() => {
+                if (showAddForm) {
+                  resetForm();
+                } else {
+                  setEditingItem(null);
+                  setFormData(getInitialFormState());
+                  setShowAddForm(true);
+                }
+              }}
+            >
+              {showAddForm ? (editingItem ? 'Annulla modifica' : 'Annulla') : '➕ Nuovo Piatto'}
             </button>
-            <button type="button" onClick={resetForm} style={{
-              backgroundColor: '#636e72',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}>
-              Annulla
+            <button type="button" className="button-glass" onClick={loadData}>
+              🔄 Aggiorna
             </button>
           </div>
-        </form>
-      )}
+        </div>
 
-      {/* Current Menu Items */}
-      <div>
-        <h3>Piatti Attuali ({menuItems.length})</h3>
+        {showAddForm && (
+          <form className="menu-management__form" onSubmit={handleSubmit}>
+            <h3 className="menu-management__form-title">
+              {editingItem ? `✏️ Modifica: ${editingItem.name}` : '➕ Nuovo Piatto'}
+            </h3>
+
+            <div className="menu-management__form-grid menu-management__form-grid--split">
+              <div className="form-field">
+                <label className="form-label" htmlFor="name">Nome</label>
+                <input
+                  id="name"
+                  name="name"
+                  className="input-glass"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label className="form-label" htmlFor="category">Categoria</label>
+                <select
+                  id="category"
+                  name="category"
+                  className="select-glass"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                >
+                  {categories.filter(category => category !== 'all').map(category => (
+                    <option key={category} value={category}>{categoryLabels[category]}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label className="form-label" htmlFor="price">Prezzo (€)</label>
+                <input
+                  id="price"
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="input-glass"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label className="form-label" htmlFor="preparation_time">Preparazione (min)</label>
+                <input
+                  id="preparation_time"
+                  name="preparation_time"
+                  type="number"
+                  min="1"
+                  className="input-glass"
+                  value={formData.preparation_time}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+
+            <div className="form-field">
+              <label className="form-label" htmlFor="description">Descrizione</label>
+              <textarea
+                id="description"
+                name="description"
+                className="textarea-glass menu-management__textarea"
+                value={formData.description}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="form-field">
+              <label className="form-label" htmlFor="allergens">Allergeni (separati da virgola)</label>
+              <input
+                id="allergens"
+                name="allergens"
+                className="input-glass"
+                value={formData.allergens}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            {renderNutritionalFields()}
+
+            <div className="menu-management__form-row">
+              <strong className="text-muted">Disponibilità</strong>
+              <AvailabilityToggle
+                id="form-availability"
+                checked={formData.is_available}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="menu-management__note">
+              <strong>📝 Nota:</strong> Regola disponibilità e dettagli del piatto prima di salvarlo.
+            </div>
+
+            <div className="menu-management__form-actions">
+              <button type="submit" className="button-glass button-glass--primary menu-management__submit">
+                {editingItem ? 'Salva Modifiche' : 'Salva Piatto'}
+              </button>
+              <button type="button" className="button-glass" onClick={resetForm}>
+                Annulla
+              </button>
+            </div>
+          </form>
+        )}
+
+        {!showAddForm && !editingItem && (
+          <div className="menu-management__empty-hint text-muted">
+            Premi "Nuovo Piatto" per aggiungere un elemento oppure modifica un piatto dalla tabella.
+          </div>
+        )}
+      </section>
+
+      <section className="menu-management__panel menu-management__panel--legacy">
+        <div className="menu-management__list-header">
+          <h3>Piatti attuali ({menuItems.length})</h3>
+          <div className="menu-management__category-filters">
+            {categories.map(category => (
+              <button
+                key={category}
+                type="button"
+                className={`button-glass menu-management__category-button ${selectedCategory === category ? 'button-glass--primary' : ''}`}
+                onClick={() => setSelectedCategory(category)}
+              >
+                {categoryLabels[category]}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {menuItems.length === 0 ? (
-          <p>Nessun piatto nel menu. Inizia aggiungendone uno!</p>
+          <div className="empty-state">Nessun piatto presente. Aggiungi il primo elemento per iniziare.</div>
+        ) : filteredMenuItems.length === 0 ? (
+          <div className="empty-state">
+            Nessun piatto nella categoria "{categoryLabels[selectedCategory]}".
+          </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="menu-management__table-wrap">
+            <table className="menu-management__table">
               <thead>
-                <tr style={{ backgroundColor: '#ddd' }}>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Nome</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Categoria</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Prezzo</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Tempo Prep.</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Disponibilità</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Allergeni</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>Azioni</th>
+                <tr>
+                  <th>Nome</th>
+                  <th>Categoria</th>
+                  <th>Prezzo</th>
+                  <th>Prep.</th>
+                  <th>Disponibilità</th>
+                  <th>Allergeni</th>
+                  <th className="menu-management__table-actions">Azioni</th>
                 </tr>
               </thead>
               <tbody>
-                {menuItems.map(item => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '8px' }}>
-                      <strong>{item.name}</strong>
-                      {item.description && (
-                        <div style={{ fontSize: '0.8em', color: '#666', marginTop: '4px' }}>
-                          {item.description}
-                        </div>
-                      )}
+                {filteredMenuItems.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="menu-management__table-name">
+                        <strong>{item.name}</strong>
+                        {item.description && <span className="text-muted">{item.description}</span>}
+                      </div>
                     </td>
-                    <td style={{ padding: '8px', textTransform: 'capitalize' }}>
-                      {item.category}
-                    </td>
-                    <td style={{ padding: '8px', fontWeight: 'bold' }}>
-                      €{item.price}
-                    </td>
-                    <td style={{ padding: '8px' }}>
-                      {item.preparation_time} min
-                    </td>
-                    <td style={{ padding: '8px' }}>
+                    <td className="menu-management__table-category">{categoryLabels[item.category] || item.category}</td>
+                    <td className="menu-management__table-price">€{item.price}</td>
+                    <td>{item.preparation_time} min</td>
+                    <td>
                       <AvailabilityToggle
                         id={`availability-${item.id}`}
-                        checked={item.is_available}
+                        checked={Boolean(item.is_available)}
                         onChange={() => handleToggleAvailability(item)}
-                        labelOn="Disponibile"
-                        labelOff="Non disponibile"
                       />
                     </td>
-                    <td style={{ padding: '8px' }}>
+                    <td>
                       {item.allergens && item.allergens.length > 0 ? (
-                        <span style={{ fontSize: '0.8em', color: '#e17000' }}>
-                          {item.allergens.join(', ')}
-                        </span>
+                        <span className="menu-management__table-allergens">{item.allergens.join(', ')}</span>
                       ) : (
-                        <span style={{ color: '#666' }}>Nessuno</span>
+                        <span className="text-muted">Nessuno</span>
                       )}
                     </td>
-                    <td style={{ padding: '8px' }}>
-                      <button
-                        onClick={() => handleEdit(item)}
-                        style={{
-                          backgroundColor: '#0984e3',
-                          color: 'white',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.8em',
-                          marginRight: '8px'
-                        }}
-                      >
-                        Modifica
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item)}
-                        style={{
-                          backgroundColor: '#d63031',
-                          color: 'white',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.8em'
-                        }}
-                      >
-                        Elimina
-                      </button>
+                    <td>
+                      <div className="menu-management__table-buttons">
+                        <button
+                          type="button"
+                          className="button-glass"
+                          onClick={() => handleEdit(item)}
+                        >
+                          ✏️ Modifica
+                        </button>
+                        <button
+                          type="button"
+                          className="button-glass button-glass--danger"
+                          onClick={() => handleDelete(item)}
+                        >
+                          🗑️ Elimina
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -455,7 +447,7 @@ export default function MenuManagement() {
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
