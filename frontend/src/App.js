@@ -13,7 +13,7 @@ import KitchenDisplay from './components/KitchenDisplay';
 import ActiveOrders from './components/ActiveOrders';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('orderTaking');
+  const [activeTab, setActiveTab] = useState('menu');
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
   useEffect(() => {
