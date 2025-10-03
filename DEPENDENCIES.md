@@ -11,22 +11,21 @@
 - gunicorn==21.2.0 (WSGI HTTP Server for production)
 
 ## Database-specific:
-- psycopg2-binary==2.9.7 (PostgreSQL adapter - menu-inventory, order-management, billing-payments)
+- psycopg2-binary==2.9.7 (PostgreSQL adapter - menu-inventory, order-management)
 
 ## Message Queue:
-- pika==1.3.2 (RabbitMQ client - order-management, billing-payments)
+- pika==1.3.2 (RabbitMQ client - order-management)
 
 ## Caching:
 - redis==4.6.0 (Redis client - menu-inventory)
 
 ## HTTP Client:
-- requests==2.31.0 (HTTP library - order-management, billing-payments, api-gateway)
+- requests==2.31.0 (HTTP library - order-management, api-gateway)
 
 ## Documentation:
 - flask-swagger-ui==4.11.1 (Swagger UI - menu-inventory)
 
 ## Service-specific requirements status:
 ✅ menu-inventory: Complete
-✅ order-management: Complete  
-✅ billing-payments: Complete
+✅ order-management: Complete
 ✅ api-gateway: Complete

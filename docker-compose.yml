@@ -43,20 +43,6 @@ services:
     networks:
       - byteristo-network
 
-  postgres-billing:
-    image: postgres:13
-    container_name: byteristo-db-billing
-    environment:
-      POSTGRES_DB: billing_db
-      POSTGRES_USER: billing_user
-      POSTGRES_PASSWORD: billing_password
-    volumes:
-      - postgres_billing_data:/var/lib/postgresql/data
-    ports:
-      - "5434:5432"
-    networks:
-      - byteristo-network
-
   # Redis for caching
   redis:
     image: redis:6-alpine
@@ -112,29 +98,6 @@ services:
     networks:
       - byteristo-network
 
-  # Billing & Payments Service
-  billing-payments-service:
-    build: ./services/billing-payments
-    container_name: byteristo-billing-payments
-    ports:
-      - "3003:3003"
-    environment:
-      - FLASK_ENV=development
-      - PORT=3003
-      - DB_HOST=postgres-billing
-      - DB_PORT=5432
-      - DB_NAME=billing_db
-      - DB_USER=billing_user
-      - DB_PASSWORD=billing_password
-      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
-      - ORDER_SERVICE_URL=http://order-management-service:3002
-    depends_on:
-      - postgres-billing
-      - rabbitmq
-      - order-management-service
-    networks:
-      - byteristo-network
-
   # API Gateway
   api-gateway:
     build: ./services/api-gateway
@@ -146,11 +109,9 @@ services:
       - PORT=3000
       - MENU_SERVICE_URL=http://menu-inventory-service:3001
       - ORDER_SERVICE_URL=http://order-management-service:3002
-      - BILLING_SERVICE_URL=http://billing-payments-service:3003
     depends_on:
       - menu-inventory-service
       - order-management-service
-      - billing-payments-service
     networks:
       - byteristo-network
 
@@ -158,7 +119,6 @@ volumes:
   rabbitmq_data:
   postgres_menu_data:
   postgres_orders_data:
-  postgres_billing_data:
   redis_data:
 
 networks:

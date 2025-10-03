@@ -4,7 +4,6 @@ import './App.css';
 // Import existing components
 import MenuDisplay from './components/MenuDisplay';
 import MenuManagement from './components/MenuManagement';
-import Bills from './components/Bills';
 import Payments from './components/Payments';
 
 // Import new order management components
@@ -28,7 +27,6 @@ function App() {
     { id: 'activeOrders', label: '📊 Ordini Attivi', component: <ActiveOrders /> },
     { id: 'kitchen', label: '👨‍🍳 Cucina', component: <KitchenDisplay /> },
     { id: 'payments', label: '💳 Payments', component: <Payments /> },
-    { id: 'bills', label: '🧾 Bills', component: <Bills /> },
   ];
 
   const activeComponent = tabs.find(tab => tab.id === activeTab)?.component;
