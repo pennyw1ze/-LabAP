@@ -289,9 +289,6 @@ export default function ActiveOrders() {
               <footer className="active-orders__footer">
                 <div>
                   <div className="active-orders__footer-total">Totale: €{order.final_amount}</div>
-                  {order.tax_amount > 0 && (
-                    <span className="text-muted">(IVA: €{order.tax_amount})</span>
-                  )}
                 </div>
                 <div className="active-orders__actions">
                   {getStatusActions(order)}

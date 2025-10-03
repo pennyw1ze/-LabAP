@@ -167,10 +167,9 @@ def create_order():
         
         # Calculate totals
         total_amount = sum(item['total_price'] for item in validated_data['items'])
-        tax_rate = 0.10  # 10% tax
-        tax_amount = total_amount * tax_rate
+        tax_amount = 0  # No tax applied - prices are final
         discount_amount = 0  # No discount for now
-        final_amount = total_amount + tax_amount - discount_amount
+        final_amount = total_amount  # Final amount equals total amount without tax
         
         # Create order
         order = Order(
