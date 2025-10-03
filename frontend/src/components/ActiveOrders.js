@@ -186,7 +186,6 @@ export default function ActiveOrders() {
               <option value="confirmed">Confermati</option>
               <option value="preparing">In preparazione</option>
               <option value="ready">Pronti</option>
-              <option value="delivered">Consegnati</option>
               <option value="cancelled">Annullati</option>
             </select>
           </div>
