@@ -270,21 +270,6 @@ export default function OrderTaking() {
             />
           </div>
 
-          <div className="form-field">
-            <label className="form-label" htmlFor="order-type">
-              Tipo Ordine
-            </label>
-            <select
-              id="order-type"
-              className="select-glass"
-              value={currentOrder.order_type}
-              onChange={(e) => setCurrentOrder(prev => ({ ...prev, order_type: e.target.value }))}
-            >
-              <option value="dine_in">Al Tavolo</option>
-              <option value="takeout">Da Asporto</option>
-              <option value="delivery">Consegna</option>
-            </select>
-          </div>
         </div>
 
         <div className="form-section">
