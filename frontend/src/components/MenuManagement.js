@@ -24,19 +24,21 @@ const AvailabilityToggle = ({
   name = 'is_available',
   id,
   labelOn = 'Disponibile',
-  labelOff = 'Non disponibile'
+  labelOff = 'Non disponibile',
+  disabled = false
 }) => (
-  <label className="availability-toggle">
+  <label className={`availability-toggle ${disabled ? 'availability-toggle--loading' : ''}`}>
     <input
       id={id}
       type="checkbox"
       name={name}
       checked={checked}
       onChange={onChange}
+      disabled={disabled}
     />
     <span className="availability-toggle__slider" aria-hidden="true" />
     <span className="availability-toggle__label">
-      {checked ? labelOn : labelOff}
+      {disabled ? 'Aggiornando...' : (checked ? labelOn : labelOff)}
     </span>
   </label>
 );
@@ -48,6 +50,7 @@ export default function MenuManagement() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState(getInitialFormState());
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [togglingItems, setTogglingItems] = useState(new Set());
 
   const categories = ['all', 'appetizer', 'main', 'dessert', 'beverage', 'side'];
   const categoryLabels = {
@@ -88,26 +91,39 @@ export default function MenuManagement() {
         ...formData,
         price: parseFloat(formData.price),
         preparation_time: parseInt(formData.preparation_time, 10),
-        allergens: formData.allergens ? formData.allergens.split(',').map(a => a.trim()) : null,
+        allergens: formData.allergens && String(formData.allergens).trim() ? String(formData.allergens).split(',').map(a => a.trim()).filter(a => a.length > 0) : [],
         nutritional_info: {
-          calories: formData.nutritional_info.calories ? parseInt(formData.nutritional_info.calories, 10) : null,
-          protein: formData.nutritional_info.protein ? parseFloat(formData.nutritional_info.protein) : null,
-          carbs: formData.nutritional_info.carbs ? parseFloat(formData.nutritional_info.carbs) : null,
-          fat: formData.nutritional_info.fat ? parseFloat(formData.nutritional_info.fat) : null,
+          calories: formData.nutritional_info.calories && String(formData.nutritional_info.calories).trim() ? parseInt(String(formData.nutritional_info.calories).trim(), 10) : null,
+          protein: formData.nutritional_info.protein && String(formData.nutritional_info.protein).trim() ? parseFloat(String(formData.nutritional_info.protein).trim()) : null,
+          carbs: formData.nutritional_info.carbs && String(formData.nutritional_info.carbs).trim() ? parseFloat(String(formData.nutritional_info.carbs).trim()) : null,
+          fat: formData.nutritional_info.fat && String(formData.nutritional_info.fat).trim() ? parseFloat(String(formData.nutritional_info.fat).trim()) : null,
         }
       };
 
       if (editingItem) {
+        // Aggiorna il piatto esistente
         await updateMenuItem(editingItem.id, menuItemData);
+        await loadData();
       } else {
+        // Crea un nuovo piatto
         await createMenuItem(menuItemData);
+        await loadData();
       }
 
       resetForm();
-      await loadData();
     } catch (error) {
       console.error('Error saving menu item:', error);
-      alert('Errore nel salvataggio del piatto');
+      
+      // Prova a estrarre un messaggio di errore più specifico
+      let errorMessage = 'Errore nel salvataggio del piatto';
+      
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -122,10 +138,10 @@ export default function MenuManagement() {
       preparation_time: menuItem.preparation_time ?? 15,
       allergens: menuItem.allergens && menuItem.allergens.length > 0 ? menuItem.allergens.join(', ') : '',
       nutritional_info: {
-        calories: menuItem.nutritional_info?.calories ?? '',
-        protein: menuItem.nutritional_info?.protein ?? '',
-        carbs: menuItem.nutritional_info?.carbs ?? '',
-        fat: menuItem.nutritional_info?.fat ?? ''
+        calories: menuItem.nutritional_info?.calories ? String(menuItem.nutritional_info.calories) : '',
+        protein: menuItem.nutritional_info?.protein ? String(menuItem.nutritional_info.protein) : '',
+        carbs: menuItem.nutritional_info?.carbs ? String(menuItem.nutritional_info.carbs) : '',
+        fat: menuItem.nutritional_info?.fat ? String(menuItem.nutritional_info.fat) : ''
       }
     });
     setShowAddForm(true);
@@ -151,15 +167,53 @@ export default function MenuManagement() {
 
   const handleToggleAvailability = async (menuItem) => {
     const desiredAvailability = !menuItem.is_available;
+    
+    // Aggiunge l'item alla lista dei toggle in corso
+    setTogglingItems(prev => new Set(prev.add(menuItem.id)));
+    
+    // Aggiornamento ottimistico: aggiorniamo subito l'UI locale
+    setMenuItems(prevItems => 
+      prevItems.map(item => 
+        item.id === menuItem.id 
+          ? { ...item, is_available: desiredAvailability }
+          : item
+      )
+    );
+    
     try {
-      const updatedItem = await updateMenuItem(menuItem.id, { is_available: desiredAvailability });
-      setMenuItems(prev => prev.map(item => item.id === menuItem.id ? { ...item, ...(updatedItem || {}), is_available: desiredAvailability } : item));
+      // Aggiorna il database
+      await updateMenuItem(menuItem.id, {
+        is_available: desiredAvailability
+      });
+      
+      // Se stavamo modificando questo piatto, aggiorniamo anche il form
       if (editingItem?.id === menuItem.id) {
-        setFormData(prev => ({ ...prev, is_available: desiredAvailability }));
+        setFormData(prev => ({
+          ...prev,
+          is_available: desiredAvailability
+        }));
       }
+      
     } catch (error) {
       console.error('Error updating availability:', error);
+      
+      // Ripristiniamo lo stato precedente in caso di errore
+      setMenuItems(prevItems => 
+        prevItems.map(item => 
+          item.id === menuItem.id 
+            ? { ...item, is_available: !desiredAvailability }
+            : item
+        )
+      );
+      
       alert("Errore nell'aggiornamento della disponibilità");
+    } finally {
+      // Rimuove l'item dalla lista dei toggle in corso
+      setTogglingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(menuItem.id);
+        return newSet;
+      });
     }
   };
 
@@ -414,6 +468,7 @@ export default function MenuManagement() {
                         id={`availability-${item.id}`}
                         checked={Boolean(item.is_available)}
                         onChange={() => handleToggleAvailability(item)}
+                        disabled={togglingItems.has(item.id)}
                       />
                     </td>
                     <td>

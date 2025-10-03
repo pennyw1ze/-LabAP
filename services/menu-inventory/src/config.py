@@ -12,7 +12,8 @@ class Config:
     DB_USER = os.environ.get('DB_USER', 'menu_user')
     DB_PASSWORD = os.environ.get('DB_PASSWORD', 'menu_password')
     
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///menu_inventory.db'
+    # Construct PostgreSQL URI from environment variables
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # RabbitMQ
