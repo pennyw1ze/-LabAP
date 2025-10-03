@@ -26,7 +26,7 @@ function App() {
     { id: 'orderTaking', label: '📋 Presa Ordini', component: <OrderTaking /> },
     { id: 'activeOrders', label: '📊 Ordini Attivi', component: <ActiveOrders /> },
     { id: 'kitchen', label: '👨‍🍳 Cucina', component: <KitchenDisplay /> },
-    { id: 'payments', label: '💳 Payments', component: <Payments /> },
+    { id: 'payments', label: '💳 Pagamenti', component: <Payments /> },
   ];
 
   const activeComponent = tabs.find(tab => tab.id === activeTab)?.component;
