@@ -56,7 +56,6 @@ export default function Payments() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: '#ff9f0a',
       confirmed: '#0a84ff',
       preparing: '#ff5722',
       ready: '#34c759',

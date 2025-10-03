@@ -57,7 +57,6 @@ export default function ActiveOrders() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: '#ff9f0a',
       confirmed: '#0a84ff',
       preparing: '#ff5722',
       ready: '#34c759',
@@ -83,29 +82,6 @@ export default function ActiveOrders() {
     const actions = [];
 
     switch (order.status) {
-      case 'pending':
-        actions.push(
-          <button
-            key="confirm"
-            type="button"
-            className="button-glass button-glass--primary"
-            onClick={() => handleStatusUpdate(order.id, 'confirmed')}
-          >
-            ✅ Conferma
-          </button>
-        );
-        actions.push(
-          <button
-            key="cancel"
-            type="button"
-            className="button-glass button-glass--danger"
-            onClick={() => handleStatusUpdate(order.id, 'cancelled')}
-          >
-            ❌ Annulla
-          </button>
-        );
-        break;
-
       case 'ready':
         // Nessuna azione per ordini pronti
         break;
@@ -173,7 +149,6 @@ export default function ActiveOrders() {
             >
               <option value="all">Tutti gli ordini</option>
               <option value="active">Ordini attivi</option>
-              <option value="pending">In attesa</option>
               <option value="confirmed">Confermati</option>
               <option value="preparing">In preparazione</option>
               <option value="ready">Pronti</option>
@@ -302,12 +277,6 @@ export default function ActiveOrders() {
       <section className="glass-card active-orders__summary">
         <h3>📊 Riepilogo</h3>
         <div className="active-orders__summary-grid">
-          <div className="active-orders__summary-card">
-            <div className="active-orders__summary-value">
-              {orders.filter(o => o.status === 'pending').length}
-            </div>
-            <div className="active-orders__summary-label">In Attesa</div>
-          </div>
           <div className="active-orders__summary-card">
             <div className="active-orders__summary-value">
               {orders.filter(o => o.status === 'confirmed').length}
