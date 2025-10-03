@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getMenu, createOrder } from '../api';
+import { getMenu } from '../api';
+import { createOrder } from '../api/orderApi';
 
 export default function OrderTaking() {
   const [menuItems, setMenuItems] = useState([]);

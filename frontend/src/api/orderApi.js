@@ -1,6 +1,6 @@
 // Funzioni API per la gestione degli ordini
 
-const ORDER_SERVICE_URL = process.env.REACT_APP_ORDER_SERVICE_URL || 'http://localhost:3002';
+const ORDER_SERVICE_URL = process.env.REACT_APP_ORDER_SERVICE_URL || 'http://localhost:3000/api';
 
 // Gestione errori API
 const handleApiError = (error) => {
@@ -22,7 +22,7 @@ export const getOrders = async (filters = {}) => {
     if (filters.date_to) params.append('date_to', filters.date_to);
     if (filters.limit) params.append('limit', filters.limit);
 
-    const response = await fetch(`${ORDER_SERVICE_URL}/api/orders?${params}`);
+    const response = await fetch(`${ORDER_SERVICE_URL}/orders?${params}`);
     const data = await response.json();
     
     if (!data.success) {
@@ -37,7 +37,7 @@ export const getOrders = async (filters = {}) => {
 
 export const getOrderById = async (orderId) => {
   try {
-    const response = await fetch(`${ORDER_SERVICE_URL}/api/orders/${orderId}`);
+    const response = await fetch(`${ORDER_SERVICE_URL}/orders/${orderId}`);
     const data = await response.json();
     
     if (!data.success) {
@@ -52,7 +52,7 @@ export const getOrderById = async (orderId) => {
 
 export const createOrder = async (orderData) => {
   try {
-    const response = await fetch(`${ORDER_SERVICE_URL}/api/orders`, {
+    const response = await fetch(`${ORDER_SERVICE_URL}/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ export const createOrder = async (orderData) => {
 
 export const updateOrderStatus = async (orderId, status) => {
   try {
-    const response = await fetch(`${ORDER_SERVICE_URL}/api/orders/${orderId}/status`, {
+    const response = await fetch(`${ORDER_SERVICE_URL}/orders/${orderId}/status`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ export const updateOrderStatus = async (orderId, status) => {
 
 export const updateOrderItemStatus = async (orderId, itemId, status) => {
   try {
-    const response = await fetch(`${ORDER_SERVICE_URL}/api/orders/${orderId}/items/${itemId}/status`, {
+    const response = await fetch(`${ORDER_SERVICE_URL}/orders/${orderId}/items/${itemId}/status`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ export const updateOrderItemStatus = async (orderId, itemId, status) => {
 
 export const getKitchenOrders = async () => {
   try {
-    const response = await fetch(`${ORDER_SERVICE_URL}/api/orders/kitchen`);
+    const response = await fetch(`${ORDER_SERVICE_URL}/orders/kitchen`);
     const data = await response.json();
     
     if (!data.success) {
@@ -133,11 +133,11 @@ export const getKitchenOrders = async () => {
 
 // === MENU SERVICE ===
 
-const MENU_SERVICE_URL = process.env.REACT_APP_MENU_SERVICE_URL || 'http://localhost:3001';
+const MENU_SERVICE_URL = process.env.REACT_APP_MENU_SERVICE_URL || 'http://localhost:3000/api';
 
 export const getMenu = async () => {
   try {
-    const response = await fetch(`${MENU_SERVICE_URL}/api/menu`);
+    const response = await fetch(`${MENU_SERVICE_URL}/menu`);
     const data = await response.json();
     
     if (!data.success) {
@@ -152,7 +152,7 @@ export const getMenu = async () => {
 
 export const createMenuItem = async (menuItemData) => {
   try {
-    const response = await fetch(`${MENU_SERVICE_URL}/api/menu`, {
+    const response = await fetch(`${MENU_SERVICE_URL}/menu`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
