@@ -24,7 +24,7 @@ function App() {
     { id: 'menu', label: '🍽️ Menu', component: <MenuDisplay /> },
     { id: 'menuManagement', label: '🛠️ Gestione Menu', component: <MenuManagement /> },
     { id: 'orderTaking', label: '📋 Presa Ordini', component: <OrderTaking /> },
-    { id: 'activeOrders', label: '📊 Ordini Attivi', component: <ActiveOrders /> },
+    { id: 'activeOrders', label: '📊 Gestione Ordini', component: <ActiveOrders /> },
     { id: 'kitchen', label: '👨‍🍳 Cucina', component: <KitchenDisplay /> },
     { id: 'payments', label: '💳 Pagamenti', component: <Payments /> },
   ];

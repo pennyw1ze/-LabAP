@@ -144,7 +144,6 @@ export default function ActiveOrders() {
       <section className="glass-card active-orders__header">
         <div className="active-orders__title">
           <h2>📋 Gestione Ordini</h2>
-          <span className="text-muted">Panoramica degli ordini in tempo reale con stile Liquid Glass.</span>
         </div>
 
         <div className="active-orders__actions">
@@ -186,6 +185,7 @@ export default function ActiveOrders() {
               <option value="confirmed">Confermati</option>
               <option value="preparing">In preparazione</option>
               <option value="ready">Pronti</option>
+              <option value="delivered">Consegnati</option>
               <option value="cancelled">Annullati</option>
             </select>
           </div>

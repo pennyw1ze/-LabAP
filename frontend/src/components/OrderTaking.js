@@ -174,7 +174,6 @@ export default function OrderTaking() {
       <section className="order-taking__menu glass-card">
         <div className="order-taking__header">
           <h2>📋 Presa Ordini</h2>
-          <span className="text-muted">Seleziona i piatti e compila l'ordine in un ambiente fluido.</span>
         </div>
 
         <div className="form-section">
