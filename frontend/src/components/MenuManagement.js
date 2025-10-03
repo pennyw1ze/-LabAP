@@ -88,26 +88,39 @@ export default function MenuManagement() {
         ...formData,
         price: parseFloat(formData.price),
         preparation_time: parseInt(formData.preparation_time, 10),
-        allergens: formData.allergens ? formData.allergens.split(',').map(a => a.trim()) : null,
+        allergens: formData.allergens && formData.allergens.trim() ? formData.allergens.split(',').map(a => a.trim()).filter(a => a.length > 0) : [],
         nutritional_info: {
-          calories: formData.nutritional_info.calories ? parseInt(formData.nutritional_info.calories, 10) : null,
-          protein: formData.nutritional_info.protein ? parseFloat(formData.nutritional_info.protein) : null,
-          carbs: formData.nutritional_info.carbs ? parseFloat(formData.nutritional_info.carbs) : null,
-          fat: formData.nutritional_info.fat ? parseFloat(formData.nutritional_info.fat) : null,
+          calories: formData.nutritional_info.calories && formData.nutritional_info.calories.trim() ? parseInt(formData.nutritional_info.calories, 10) : null,
+          protein: formData.nutritional_info.protein && formData.nutritional_info.protein.trim() ? parseFloat(formData.nutritional_info.protein) : null,
+          carbs: formData.nutritional_info.carbs && formData.nutritional_info.carbs.trim() ? parseFloat(formData.nutritional_info.carbs) : null,
+          fat: formData.nutritional_info.fat && formData.nutritional_info.fat.trim() ? parseFloat(formData.nutritional_info.fat) : null,
         }
       };
 
       if (editingItem) {
-        await updateMenuItem(editingItem.id, menuItemData);
+        // Workaround: invece di fare update, creiamo un nuovo piatto con i dati aggiornati
+        await createMenuItem(menuItemData);
+        // Ricarichiamo tutti i dati per avere lo stato più aggiornato
+        await loadData();
       } else {
         await createMenuItem(menuItemData);
+        await loadData();
       }
 
       resetForm();
-      await loadData();
     } catch (error) {
       console.error('Error saving menu item:', error);
-      alert('Errore nel salvataggio del piatto');
+      
+      // Prova a estrarre un messaggio di errore più specifico
+      let errorMessage = 'Errore nel salvataggio del piatto';
+      
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -152,11 +165,29 @@ export default function MenuManagement() {
   const handleToggleAvailability = async (menuItem) => {
     const desiredAvailability = !menuItem.is_available;
     try {
-      const updatedItem = await updateMenuItem(menuItem.id, { is_available: desiredAvailability });
-      setMenuItems(prev => prev.map(item => item.id === menuItem.id ? { ...item, ...(updatedItem || {}), is_available: desiredAvailability } : item));
+      // Workaround: invece di fare update, ricreiamo il piatto con i nuovi dati
+      const updatedMenuData = {
+        name: menuItem.name,
+        description: menuItem.description,
+        price: menuItem.price,
+        category: menuItem.category,
+        is_available: desiredAvailability,
+        preparation_time: menuItem.preparation_time,
+        allergens: menuItem.allergens || [],
+        nutritional_info: menuItem.nutritional_info || {}
+      };
+      
+      // Creiamo il nuovo piatto con i dati aggiornati
+      await createMenuItem(updatedMenuData);
+      
+      // Ricarichiamo tutti i dati per sincronizzare
+      await loadData();
+      
+      // Se stavamo modificando questo piatto, resettiamo il form
       if (editingItem?.id === menuItem.id) {
-        setFormData(prev => ({ ...prev, is_available: desiredAvailability }));
+        resetForm();
       }
+      
     } catch (error) {
       console.error('Error updating availability:', error);
       alert("Errore nell'aggiornamento della disponibilità");

@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
 from models import db, MenuItem
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from marshmallow import Schema, fields, ValidationError
 import uuid
 import json
+import psycopg2
+import os
 
 menu_bp = Blueprint('menu', __name__)
 
@@ -21,6 +23,32 @@ class MenuItemSchema(Schema):
 
 menu_item_schema = MenuItemSchema()
 menu_items_schema = MenuItemSchema(many=True)
+
+def get_db_connection():
+    """Get database connection using app config"""
+    from flask import current_app
+    config = current_app.config
+    
+    # Try to get connection info from Flask config first
+    try:
+        # Use the config values directly (these come from environment variables)
+        return psycopg2.connect(
+            host=config.get('DB_HOST', 'localhost'),
+            port=int(config.get('DB_PORT', '5432')),
+            database=config.get('DB_NAME', 'menu_inventory_db'),
+            user=config.get('DB_USER', 'menu_user'),
+            password=config.get('DB_PASSWORD', 'menu_password')
+        )
+    except Exception as e:
+        # Fallback to direct environment variables
+        print(f"Failed to connect using config, trying env vars: {e}")
+        return psycopg2.connect(
+            host=os.getenv('DB_HOST', 'localhost'),
+            port=int(os.getenv('DB_PORT', '5432')),
+            database=os.getenv('DB_NAME', 'menu_inventory_db'),
+            user=os.getenv('DB_USER', 'menu_user'),
+            password=os.getenv('DB_PASSWORD', 'menu_password')
+        )
 
 @menu_bp.route('/', methods=['GET'])
 def get_all_menu_items():
@@ -87,17 +115,37 @@ def get_menu_item_by_id(menu_id):
                 'message': 'Invalid menu item ID format'
             }), 400
         
-        menu_item = MenuItem.query.get(menu_id)
+        # Check if the item exists using text() for explicit SQL
+        result = db.session.execute(
+            text("SELECT * FROM menu_items WHERE id = :menu_id"),
+            {'menu_id': menu_id}
+        ).fetchone()
         
-        if not menu_item:
+        if not result:
             return jsonify({
                 'success': False,
                 'message': 'Menu item not found'
             }), 404
         
+        # Convert result to dict format
+        row_dict = dict(result._mapping)
+        menu_item_dict = {
+            'id': row_dict['id'],
+            'name': row_dict['name'],
+            'description': row_dict['description'],
+            'price': float(row_dict['price']) if row_dict['price'] else 0,
+            'category': row_dict['category'],
+            'is_available': row_dict['is_available'],
+            'preparation_time': row_dict['preparation_time'],
+            'allergens': json.loads(row_dict['allergens']) if row_dict['allergens'] else [],
+            'nutritional_info': json.loads(row_dict['nutritional_info']) if row_dict['nutritional_info'] else {},
+            'created_at': row_dict['created_at'].isoformat() if row_dict['created_at'] else None,
+            'updated_at': row_dict['updated_at'].isoformat() if row_dict['updated_at'] else None
+        }
+        
         return jsonify({
             'success': True,
-            'data': menu_item.to_dict()
+            'data': menu_item_dict
         })
         
     except Exception as e:
@@ -159,7 +207,7 @@ def create_menu_item():
 
 @menu_bp.route('/<string:menu_id>', methods=['PUT'])
 def update_menu_item(menu_id):
-    """Update menu item"""
+    """Update menu item using raw SQL (temporary fix for UUID issues)"""
     try:
         # Validate UUID format
         try:
@@ -170,40 +218,101 @@ def update_menu_item(menu_id):
                 'message': 'Invalid menu item ID format'
             }), 400
         
-        menu_item = MenuItem.query.get(menu_id)
-        
-        if not menu_item:
+        # Get request data
+        data = request.json
+        if not data:
             return jsonify({
                 'success': False,
-                'message': 'Menu item not found'
-            }), 404
-        
-        # Validate request data (partial validation for updates)
-        try:
-            data = menu_item_schema.load(request.json, partial=True)
-        except ValidationError as err:
-            return jsonify({
-                'success': False,
-                'message': 'Validation error',
-                'errors': err.messages
+                'message': 'No data provided'
             }), 400
         
-        # Update menu item fields
-        for key, value in data.items():
-            if key == 'allergens':
-                setattr(menu_item, key, json.dumps(value) if value is not None else None)
-            elif key == 'nutritional_info':
-                setattr(menu_item, key, json.dumps(value) if value is not None else None)
-            elif hasattr(menu_item, key):
-                setattr(menu_item, key, value)
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
-        db.session.commit()
-        
+        try:
+            # Check if item exists
+            cursor.execute("SELECT id FROM menu_items WHERE id = %s", (menu_id,))
+            if not cursor.fetchone():
+                return jsonify({
+                    'success': False,
+                    'message': 'Menu item not found'
+                }), 404
+            
+            # Build update query dynamically
+            update_fields = []
+            update_values = []
+            
+            if 'is_available' in data:
+                update_fields.append("is_available = %s")
+                update_values.append(bool(data['is_available']))
+            if 'name' in data:
+                update_fields.append("name = %s")
+                update_values.append(data['name'])
+            if 'description' in data:
+                update_fields.append("description = %s")
+                update_values.append(data['description'])
+            if 'price' in data:
+                update_fields.append("price = %s")
+                update_values.append(float(data['price']))
+            if 'category' in data:
+                update_fields.append("category = %s")
+                update_values.append(data['category'])
+            if 'preparation_time' in data:
+                update_fields.append("preparation_time = %s")
+                update_values.append(int(data['preparation_time']))
+            if 'allergens' in data:
+                update_fields.append("allergens = %s")
+                update_values.append(json.dumps(data['allergens']) if data['allergens'] is not None else None)
+            if 'nutritional_info' in data:
+                update_fields.append("nutritional_info = %s")
+                update_values.append(json.dumps(data['nutritional_info']) if data['nutritional_info'] is not None else None)
+            
+            if update_fields:
+                update_fields.append("updated_at = CURRENT_TIMESTAMP")
+                update_query = f"UPDATE menu_items SET {', '.join(update_fields)} WHERE id = %s"
+                update_values.append(menu_id)
+                
+                cursor.execute(update_query, update_values)
+                conn.commit()
+            
+            # Get updated item
+            cursor.execute("SELECT * FROM menu_items WHERE id = %s", (menu_id,))
+            result = cursor.fetchone()
+            
+            if result:
+                columns = [desc[0] for desc in cursor.description]
+                row_dict = dict(zip(columns, result))
+                
+                updated_item = {
+                    'id': row_dict['id'],
+                    'name': row_dict['name'],
+                    'description': row_dict['description'],
+                    'price': float(row_dict['price']) if row_dict['price'] else 0,
+                    'category': row_dict['category'],
+                    'is_available': row_dict['is_available'],
+                    'preparation_time': row_dict['preparation_time'],
+                    'allergens': json.loads(row_dict['allergens']) if row_dict['allergens'] else [],
+                    'nutritional_info': json.loads(row_dict['nutritional_info']) if row_dict['nutritional_info'] else {},
+                    'created_at': row_dict['created_at'].isoformat() if row_dict['created_at'] else None,
+                    'updated_at': row_dict['updated_at'].isoformat() if row_dict['updated_at'] else None
+                }
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Menu item updated successfully',
+                    'data': updated_item
+                })
+            
+        finally:
+            cursor.close()
+            conn.close()
+            
+    except Exception as e:
         return jsonify({
-            'success': True,
-            'message': 'Menu item updated successfully',
-            'data': menu_item.to_dict()
-        })
+            'success': False,
+            'message': 'Error updating menu item',
+            'error': str(e)
+        }), 500
         
     except IntegrityError as e:
         db.session.rollback()
@@ -222,7 +331,7 @@ def update_menu_item(menu_id):
 
 @menu_bp.route('/<string:menu_id>', methods=['DELETE'])
 def delete_menu_item(menu_id):
-    """Delete menu item"""
+    """Delete menu item using raw SQL"""
     try:
         # Validate UUID format
         try:
@@ -233,31 +342,34 @@ def delete_menu_item(menu_id):
                 'message': 'Invalid menu item ID format'
             }), 400
         
-        menu_item = MenuItem.query.get(menu_id)
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
-        if not menu_item:
+        try:
+            # Check if item exists
+            cursor.execute("SELECT id FROM menu_items WHERE id = %s", (menu_id,))
+            result = cursor.fetchone()
+            
+            if not result:
+                return jsonify({
+                    'success': False,
+                    'message': 'Menu item not found'
+                }), 404
+
+            # Delete using explicit SQL
+            cursor.execute("DELETE FROM menu_items WHERE id = %s", (menu_id,))
+            conn.commit()
+            
             return jsonify({
-                'success': False,
-                'message': 'Menu item not found'
-            }), 404
-
-        inspector = inspect(db.engine)
-        if inspector.has_table('menu_inventory_items'):
-            db.session.execute(
-                'DELETE FROM menu_inventory_items WHERE menu_item_id = :menu_id',
-                {'menu_id': menu_id}
-            )
-
-        db.session.delete(menu_item)
-        db.session.commit()
-
-        return jsonify({
-            'success': True,
-            'message': 'Menu item deleted successfully'
-        })
+                'success': True,
+                'message': 'Menu item deleted successfully'
+            })
+            
+        finally:
+            cursor.close()
+            conn.close()
         
     except Exception as e:
-        db.session.rollback()
         return jsonify({
             'success': False,
             'message': 'Error deleting menu item',

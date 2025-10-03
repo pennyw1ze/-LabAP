@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:3001/api"; // Porta corretta del microservizio
+const API_BASE = "http://localhost:3000/api"; // API Gateway
 
 // --- Menu ---
 export async function getMenu(filters = {}) {
@@ -45,8 +45,15 @@ export async function createMenuItem(menuData) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(menuData),
     });
-    if (!res.ok) throw new Error('Failed to create menu item');
+    
     const data = await res.json();
+    
+    if (!res.ok) {
+      // Estrai il messaggio di errore dalla risposta se disponibile
+      const errorMessage = data.message || data.error || `HTTP ${res.status}: ${res.statusText}`;
+      throw new Error(errorMessage);
+    }
+    
     return data.success ? data.data : null;
   } catch (error) {
     console.error('Error creating menu item:', error);
@@ -61,8 +68,15 @@ export async function updateMenuItem(menuId, updateData) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updateData),
     });
-    if (!res.ok) throw new Error('Failed to update menu item');
+    
     const data = await res.json();
+    
+    if (!res.ok) {
+      // Estrai il messaggio di errore dalla risposta se disponibile
+      const errorMessage = data.message || data.error || `HTTP ${res.status}: ${res.statusText}`;
+      throw new Error(errorMessage);
+    }
+    
     return data.success ? data.data : null;
   } catch (error) {
     console.error('Error updating menu item:', error);
