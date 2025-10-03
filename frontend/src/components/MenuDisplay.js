@@ -45,7 +45,7 @@ export default function MenuDisplay() {
       <div className="menu-display__header">
         <div>
           <h2>🍽️ Menu del Ristorante</h2>
-          <span className="text-muted">Consulta i piatti disponibili con un tocco glassato.</span>
+          <span className="text-muted">Consulta tutti i piatti disponibili nel menu</span>
         </div>
         <button type="button" className="button-glass button-glass--primary" onClick={loadMenuData}>
           🔄 Aggiorna Menu

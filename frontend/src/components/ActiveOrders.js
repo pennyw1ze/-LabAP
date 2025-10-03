@@ -107,16 +107,7 @@ export default function ActiveOrders() {
         break;
 
       case 'ready':
-        actions.push(
-          <button
-            key="deliver"
-            type="button"
-            className="button-glass button-glass--success"
-            onClick={() => handleStatusUpdate(order.id, 'delivered')}
-          >
-            📦 Consegna
-          </button>
-        );
+        // Nessuna azione per ordini pronti
         break;
 
       default:
@@ -144,7 +135,7 @@ export default function ActiveOrders() {
       <section className="glass-card active-orders__header">
         <div className="active-orders__title">
           <h2>📋 Gestione Ordini</h2>
-          <span className="text-muted">Panoramica degli ordini in tempo reale con stile Liquid Glass.</span>
+          <span className="text-muted">Panoramica degli ordini in tempo reale</span>
         </div>
 
         <div className="active-orders__actions">
@@ -248,18 +239,20 @@ export default function ActiveOrders() {
               </header>
 
               <div className="active-orders__card-body">
-                <div className={`active-orders__timing ${timing.isOverdue ? 'active-orders__timing--overdue' : ''}`}>
-                  <span>
-                    Ordinato {timing.elapsedMinutes} min fa • {new Date(order.created_at).toLocaleTimeString('it-IT')}
-                  </span>
-                  {timing.estimatedRemainingMinutes !== null && (
-                    <span className={timing.isOverdue ? 'overdue' : 'text-muted'}>
-                      {timing.isOverdue
-                        ? `In ritardo di ${Math.abs(timing.estimatedRemainingMinutes)} min`
-                        : `Stima: ${timing.estimatedRemainingMinutes} min`}
+                {order.status !== 'ready' && (
+                  <div className={`active-orders__timing ${timing.isOverdue ? 'active-orders__timing--overdue' : ''}`}>
+                    <span>
+                      Ordinato {timing.elapsedMinutes} min fa • {new Date(order.created_at).toLocaleTimeString('it-IT')}
                     </span>
-                  )}
-                </div>
+                    {timing.estimatedRemainingMinutes !== null && (
+                      <span className={timing.isOverdue ? 'overdue' : 'text-muted'}>
+                        {timing.isOverdue
+                          ? `In ritardo di ${Math.abs(timing.estimatedRemainingMinutes)} min`
+                          : `Stima: ${timing.estimatedRemainingMinutes} min`}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <strong>Piatti ({order.items.length})</strong>
