@@ -141,13 +141,24 @@ def update_order(order_id):
     )
     return jsonify(response_data), status_code
 
-@gateway_bp.route('/orders/<order_id>/status', methods=['PATCH'])
+@gateway_bp.route('/orders/<order_id>/status', methods=['PUT'])
 def update_order_status(order_id):
     """Update order status"""
     response_data, status_code = proxy_request(
         current_app.config['ORDER_SERVICE_URL'],
         f'/api/orders/{order_id}/status',
-        method='PATCH',
+        method='PUT',
+        data=request.json
+    )
+    return jsonify(response_data), status_code
+
+@gateway_bp.route('/orders/<order_id>/items/<item_id>/status', methods=['PUT'])
+def update_order_item_status(order_id, item_id):
+    """Update order item status"""
+    response_data, status_code = proxy_request(
+        current_app.config['ORDER_SERVICE_URL'],
+        f'/api/orders/{order_id}/items/{item_id}/status',
+        method='PUT',
         data=request.json
     )
     return jsonify(response_data), status_code

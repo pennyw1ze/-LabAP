@@ -8,7 +8,7 @@ db = SQLAlchemy()
 class Order(db.Model):
     __tablename__ = 'orders'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     order_number = db.Column(db.String(50), unique=True, nullable=False)
     table_number = db.Column(db.Integer)
     customer_name = db.Column(db.String(100))
@@ -49,9 +49,9 @@ class Order(db.Model):
 class OrderItem(db.Model):
     __tablename__ = 'order_items'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'), nullable=False)
-    menu_item_id = db.Column(UUID(as_uuid=True), nullable=False)  # Reference to menu service
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    order_id = db.Column(db.String(36), db.ForeignKey('orders.id'), nullable=False)
+    menu_item_id = db.Column(db.String(36), nullable=False)  # Reference to menu service
     menu_item_name = db.Column(db.String(100), nullable=False)  # Cached for performance
     quantity = db.Column(db.Integer, nullable=False, default=1)
     unit_price = db.Column(db.Numeric(10, 2), nullable=False)

@@ -185,8 +185,8 @@ def create_order():
         # Create order items
         for item_data in validated_data['items']:
             order_item = OrderItem(
-                order_id=order.id,
-                menu_item_id=item_data['menu_item_id'],
+                order_id=order.id,  # Now it's already a string
+                menu_item_id=item_data['menu_item_id'],  # Already a string
                 menu_item_name=item_data['menu_item_name'],
                 quantity=item_data['quantity'],
                 unit_price=item_data['unit_price'],
@@ -230,9 +230,24 @@ def create_order():
 def update_order_status(order_id):
     """Update order status"""
     try:
-        order = Order.query.get(order_id)
+        # Validate UUID format
+        try:
+            import uuid
+            uuid.UUID(order_id)
+        except ValueError:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid order ID format'
+            }), 400
         
-        if not order:
+        # Find order using raw SQL (SQLite compatible)
+        from sqlalchemy import text
+        result = db.session.execute(
+            text("SELECT * FROM orders WHERE id = :order_id"),
+            {'order_id': order_id}
+        ).fetchone()
+        
+        if not result:
             return jsonify({
                 'success': False,
                 'message': 'Order not found'
@@ -255,25 +270,59 @@ def update_order_status(order_id):
                 'message': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'
             }), 400
         
-        print(f"Updating order {order_id} status from {order.status} to {new_status}")
+        print(f"Updating order {order_id} status to {new_status}")
         
-        order.status = new_status
-        order.updated_at = datetime.utcnow()
+        # Update order status using raw SQL (SQLite compatible)
+        db.session.execute(
+            text("UPDATE orders SET status = :status, updated_at = CURRENT_TIMESTAMP WHERE id = :order_id"),
+            {'status': new_status, 'order_id': order_id}
+        )
         
         # Update all items status when order status changes
         if new_status in ['preparing', 'ready', 'delivered']:
-            for item in order.items:
-                if item.status == 'pending':
-                    item.status = new_status if new_status != 'confirmed' else 'pending'
+            db.session.execute(
+                text("""
+                    UPDATE order_items 
+                    SET status = :item_status, updated_at = CURRENT_TIMESTAMP 
+                    WHERE order_id = :order_id AND status = 'pending'
+                """),
+                {'item_status': new_status if new_status != 'confirmed' else 'pending', 'order_id': order_id}
+            )
         
         db.session.commit()
         
-        print(f"Order status updated successfully: {order.order_number}")
+        print(f"Order status updated successfully")
+        
+        # Get updated order data
+        updated_order = db.session.execute(
+            text("SELECT * FROM orders WHERE id = :order_id"),
+            {'order_id': order_id}
+        ).fetchone()
+        
+        # Get order items
+        items_result = db.session.execute(
+            text("SELECT * FROM order_items WHERE order_id = :order_id ORDER BY created_at"),
+            {'order_id': order_id}
+        ).fetchall()
+        
+        # Convert to dict format
+        order_dict = dict(updated_order._mapping)
+        order_dict['id'] = str(order_dict['id'])
+        
+        items_dict = []
+        for item in items_result:
+            item_dict = dict(item._mapping)
+            item_dict['id'] = str(item_dict['id'])
+            item_dict['order_id'] = str(item_dict['order_id'])
+            item_dict['menu_item_id'] = str(item_dict['menu_item_id'])
+            items_dict.append(item_dict)
+        
+        order_dict['items'] = items_dict
         
         return jsonify({
             'success': True,
             'message': 'Order status updated successfully',
-            'data': order.to_dict()
+            'data': order_dict
         })
         
     except Exception as e:
@@ -292,17 +341,37 @@ def update_order_status(order_id):
 def update_order_item_status(order_id, item_id):
     """Update order item status"""
     try:
-        order = Order.query.get(order_id)
+        # Validate UUID formats
+        try:
+            import uuid
+            uuid.UUID(order_id)
+            uuid.UUID(item_id)
+        except ValueError:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid ID format'
+            }), 400
         
-        if not order:
+        # Find order using raw SQL (SQLite compatible)
+        from sqlalchemy import text
+        order_result = db.session.execute(
+            text("SELECT * FROM orders WHERE id = :order_id"),
+            {'order_id': order_id}
+        ).fetchone()
+        
+        if not order_result:
             return jsonify({
                 'success': False,
                 'message': 'Order not found'
             }), 404
         
-        order_item = OrderItem.query.filter_by(id=item_id, order_id=order_id).first()
+        # Find order item using raw SQL (SQLite compatible)
+        item_result = db.session.execute(
+            text("SELECT * FROM order_items WHERE id = :item_id AND order_id = :order_id"),
+            {'item_id': item_id, 'order_id': order_id}
+        ).fetchone()
         
-        if not order_item:
+        if not item_result:
             return jsonify({
                 'success': False,
                 'message': 'Order item not found'
@@ -325,24 +394,69 @@ def update_order_item_status(order_id, item_id):
                 'message': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'
             }), 400
         
-        print(f"Updating item {item_id} status from {order_item.status} to {new_status}")
+        print(f"Updating item {item_id} status to {new_status}")
         
-        order_item.status = new_status
-        order_item.updated_at = datetime.utcnow()
+        # Update order item status using raw SQL (SQLite compatible)
+        db.session.execute(
+            text("""
+                UPDATE order_items 
+                SET status = :status, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = :item_id AND order_id = :order_id
+            """),
+            {'status': new_status, 'item_id': item_id, 'order_id': order_id}
+        )
         
         # Check if all items are ready and update order status
-        all_items_ready = all(item.status in ['ready', 'served'] for item in order.items)
-        if all_items_ready and order.status != 'ready':
-            order.status = 'ready'
+        all_items_result = db.session.execute(
+            text("""
+                SELECT COUNT(*) as total_count,
+                       COUNT(CASE WHEN status IN ('ready', 'served') THEN 1 END) as ready_count
+                FROM order_items 
+                WHERE order_id = :order_id
+            """),
+            {'order_id': order_id}
+        ).fetchone()
+        
+        if all_items_result.total_count == all_items_result.ready_count and order_result.status != 'ready':
+            db.session.execute(
+                text("UPDATE orders SET status = 'ready', updated_at = CURRENT_TIMESTAMP WHERE id = :order_id"),
+                {'order_id': order_id}
+            )
         
         db.session.commit()
         
         print(f"Order item status updated successfully")
         
+        # Get updated order data
+        updated_order = db.session.execute(
+            text("SELECT * FROM orders WHERE id = :order_id"),
+            {'order_id': order_id}
+        ).fetchone()
+        
+        # Get order items
+        items_result = db.session.execute(
+            text("SELECT * FROM order_items WHERE order_id = :order_id ORDER BY created_at"),
+            {'order_id': order_id}
+        ).fetchall()
+        
+        # Convert to dict format
+        order_dict = dict(updated_order._mapping)
+        order_dict['id'] = str(order_dict['id'])
+        
+        items_dict = []
+        for item in items_result:
+            item_dict = dict(item._mapping)
+            item_dict['id'] = str(item_dict['id'])
+            item_dict['order_id'] = str(item_dict['order_id'])
+            item_dict['menu_item_id'] = str(item_dict['menu_item_id'])
+            items_dict.append(item_dict)
+        
+        order_dict['items'] = items_dict
+        
         return jsonify({
             'success': True,
             'message': 'Order item status updated successfully',
-            'data': order.to_dict()
+            'data': order_dict
         })
         
     except Exception as e:
