@@ -47,11 +47,12 @@ def generate_order_number():
 
 def calculate_estimated_completion_time(items):
     """Calculate estimated completion time based on preparation times"""
+    from models import italy_now
     # Get the maximum preparation time from all items
     max_prep_time = max([item.get('preparation_time', 15) for item in items], default=15)
     # Add 5 minutes buffer
     estimated_minutes = max_prep_time + 5
-    return datetime.utcnow() + timedelta(minutes=estimated_minutes)
+    return italy_now() + timedelta(minutes=estimated_minutes)
 
 
 @order_bp.route('/', methods=['GET'])
