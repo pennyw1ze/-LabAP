@@ -2,8 +2,16 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
+import pytz
 
 db = SQLAlchemy()
+
+# Timezone italiana
+ITALY_TZ = pytz.timezone('Europe/Rome')
+
+def italy_now():
+    """Restituisce l'ora corrente nel fuso orario italiano"""
+    return datetime.now(ITALY_TZ).replace(tzinfo=None)
 
 class Order(db.Model):
     __tablename__ = 'orders'
@@ -21,8 +29,8 @@ class Order(db.Model):
     final_amount = db.Column(db.Numeric(10, 2), default=0)
     special_instructions = db.Column(db.Text)
     estimated_completion_time = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=italy_now)
+    updated_at = db.Column(db.DateTime, default=italy_now, onupdate=italy_now)
     
     # Relationship with order items
     items = db.relationship('OrderItem', backref='order', cascade='all, delete-orphan')
@@ -59,8 +67,8 @@ class OrderItem(db.Model):
     special_instructions = db.Column(db.Text)
     status = db.Column(db.Enum('pending', 'preparing', 'ready', 'served', 'cancelled', name='order_item_status'), 
                       default='pending', nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=italy_now)
+    updated_at = db.Column(db.DateTime, default=italy_now, onupdate=italy_now)
 
     def to_dict(self):
         return {
