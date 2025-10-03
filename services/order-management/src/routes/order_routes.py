@@ -19,12 +19,19 @@ class OrderItemSchema(Schema):
     total_price = fields.Float(required=True, validate=lambda x: x >= 0)
     special_instructions = fields.Str(allow_none=True)
 
+    class Meta:
+        unknown = 'exclude'  # Ignore unknown fields from frontend
+
 class OrderSchema(Schema):
     table_number = fields.Int(required=True, validate=lambda x: x > 0)
     customer_name = fields.Str(allow_none=True)
     order_type = fields.Str(required=True, validate=lambda x: x in ['dine_in', 'takeout', 'delivery'])
     special_instructions = fields.Str(allow_none=True)
+    total_amount = fields.Float(allow_none=True)  # Optional, for frontend convenience
     items = fields.List(fields.Nested(OrderItemSchema), required=True, validate=lambda x: len(x) > 0)
+
+    class Meta:
+        unknown = 'exclude'  # Ignore unknown fields from frontend
 
 order_schema = OrderSchema()
 order_items_schema = OrderItemSchema(many=True)
