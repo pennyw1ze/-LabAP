@@ -50,13 +50,6 @@ DB_NAME_ORDERS=orders_db
 DB_USER_ORDERS=orders_user
 DB_PASSWORD_ORDERS=orders_password
 
-# Database Configuration - Billing
-DB_HOST_BILLING=postgres-billing
-DB_PORT_BILLING=5432
-DB_NAME_BILLING=billing_db
-DB_USER_BILLING=billing_user
-DB_PASSWORD_BILLING=billing_password
-
 # RabbitMQ Configuration
 RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
 RABBITMQ_USER=admin
@@ -68,7 +61,6 @@ REDIS_URL=redis://redis:6379
 # Service URLs (Internal Docker Network)
 MENU_SERVICE_URL=http://menu-inventory-service:3001
 ORDER_SERVICE_URL=http://order-management-service:3002
-BILLING_SERVICE_URL=http://billing-payments-service:3003
 EOF
     echo "✅ Created .env file with default configuration"
 else
@@ -104,7 +96,6 @@ echo "🔍 Service endpoints:"
 echo "   • API Gateway: http://localhost:3000"
 echo "   • Menu Inventory: http://localhost:3001" 
 echo "   • Order Management: http://localhost:3002"
-echo "   • Billing Payments: http://localhost:3003"
 echo "   • RabbitMQ Management: http://localhost:15672 (admin/password)"
 echo ""
 echo "🧪 Test all APIs:"

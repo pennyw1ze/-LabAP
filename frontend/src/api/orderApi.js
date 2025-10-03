@@ -214,8 +214,3 @@ export const calculateOrderTiming = (createdAt, estimatedCompletion) => {
     isOverdue: estimatedRemaining !== null && estimatedRemaining < 0
   };
 };
-
-// Export per compatibilità con il codice esistente
-export {
-  getOrders as getBills, // Alias per compatibilità
-};
