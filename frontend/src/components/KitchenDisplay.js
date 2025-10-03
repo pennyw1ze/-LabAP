@@ -53,7 +53,6 @@ export default function KitchenDisplay() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: '#ff9f0a',
       confirmed: '#0a84ff',
       preparing: '#ff5722',
       ready: '#34c759',
@@ -77,7 +76,6 @@ export default function KitchenDisplay() {
 
   const getStatusIcon = (status) => {
     const icons = {
-      pending: '⏳',
       confirmed: '✅',
       preparing: '👨‍🍳',
       ready: '🔔',
@@ -116,8 +114,6 @@ export default function KitchenDisplay() {
     switch (filterStatus) {
       case 'active':
         return orders.filter(order => ['confirmed', 'preparing'].includes(order.status));
-      case 'pending':
-        return orders.filter(order => order.status === 'pending');
       case 'ready':
         return orders.filter(order => order.status === 'ready');
       case 'today':
@@ -131,7 +127,6 @@ export default function KitchenDisplay() {
 
   const filterOptions = [
     { key: 'active', label: '🔥 Attivi', count: orders.filter(o => ['confirmed', 'preparing'].includes(o.status)).length },
-    { key: 'pending', label: '⏳ In attesa', count: orders.filter(o => o.status === 'pending').length },
     { key: 'ready', label: '🔔 Pronti', count: orders.filter(o => o.status === 'ready').length },
     { key: 'today', label: '📅 Oggi', count: orders.filter(o => new Date(o.created_at).toDateString() === new Date().toDateString()).length },
     { key: 'all', label: '📦 Tutti', count: orders.length }
@@ -259,16 +254,6 @@ export default function KitchenDisplay() {
                         </div>
 
                         <div className="kitchen-display__item-actions">
-                          {item.status === 'pending' && (
-                            <button
-                              type="button"
-                              className="control-button control-button--warning"
-                              onClick={() => handleItemStatusUpdate(order.id, item.id, 'preparing')}
-                            >
-                              👨‍🍳 Prepara
-                            </button>
-                          )}
-
                           {item.status === 'preparing' && (
                             <button
                               type="button"
@@ -304,15 +289,6 @@ export default function KitchenDisplay() {
                 <footer className="kitchen-display__footer">
                   <div className="text-muted">Stato corrente: {order.status.toUpperCase()}</div>
                   <div className="kitchen-display__item-actions">
-                    {order.status === 'pending' && (
-                      <button
-                        type="button"
-                        className="button-glass button-glass--primary"
-                        onClick={() => handleOrderStatusUpdate(order.id, 'confirmed')}
-                      >
-                        ✅ Conferma Ordine
-                      </button>
-                    )}
                     {order.status === 'confirmed' && (
                       <button
                         type="button"

@@ -176,7 +176,6 @@ export const createMenuItem = async (menuItemData) => {
 
 export const formatOrderStatus = (status) => {
   const statusLabels = {
-    'pending': 'In Attesa',
     'confirmed': 'Confermato',
     'preparing': 'In Preparazione',
     'ready': 'Pronto',

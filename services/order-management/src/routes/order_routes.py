@@ -167,10 +167,9 @@ def create_order():
         
         # Calculate totals
         total_amount = sum(item['total_price'] for item in validated_data['items'])
-        tax_rate = 0.10  # 10% tax
-        tax_amount = total_amount * tax_rate
+        tax_amount = 0  # No tax applied - prices are final
         discount_amount = 0  # No discount for now
-        final_amount = total_amount + tax_amount - discount_amount
+        final_amount = total_amount  # Final amount equals total amount without tax
         
         # Create order
         order = Order(
@@ -178,7 +177,7 @@ def create_order():
             table_number=validated_data['table_number'],
             customer_name=validated_data.get('customer_name'),
             order_type=validated_data['order_type'],
-            status='pending',
+            status='confirmed',
             total_amount=total_amount,
             tax_amount=tax_amount,
             discount_amount=discount_amount,
@@ -200,7 +199,7 @@ def create_order():
                 unit_price=item_data['unit_price'],
                 total_price=item_data['total_price'],
                 special_instructions=item_data.get('special_instructions'),
-                status='pending'
+                status='preparing'
             )
             db.session.add(order_item)
         
