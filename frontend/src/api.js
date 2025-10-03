@@ -121,9 +121,3 @@ export async function makePayment(paymentData) {
   console.log('Payment would be processed:', paymentData);
   return { id: 'payment-' + Date.now(), ...paymentData, status: 'completed' };
 }
-
-// --- Bills (placeholder for other microservices) ---
-export async function getBills() {
-  // Placeholder - da implementare quando avrai il microservizio bills
-  return [];
-}

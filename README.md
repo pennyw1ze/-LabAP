@@ -1,6 +1,6 @@
 # ByteRisto - Restaurant Management System
 
-ByteRisto is an internal Restaurant Management System offering an all-in-one solution for menu, ordering, and billing. Built with **Python Flask microservices**, Docker containerization, REST APIs, and message queues, with each service independently deployed. It supports staff from waiters to managers with role-based access control.
+ByteRisto is an internal Restaurant Management System offering an all-in-one solution for menu and ordering. Built with **Python Flask microservices**, Docker containerization, REST APIs, and message queues, with each service independently deployed. It supports staff from waiters to managers with role-based access control.
 
 ## 🏗️ Architecture
 
@@ -9,7 +9,6 @@ ByteRisto follows a microservices architecture with the following key components
 ### Core Services
 - **Menu Service** (Port 3001) - Manages menu items and availability
 - **Order Management Service** (Port 3002) - Handles order processing and workflow
-- **Billing & Payments Service** (Port 3003) - Manages billing and payment processing
 
 ### Infrastructure
 - **API Gateway** (Port 3000) - Unified entry point for all services
@@ -64,7 +63,6 @@ ByteRisto follows a microservices architecture with the following key components
 | API Gateway | http://localhost:3000 | http://localhost:3000/api-docs |
 | Menu | http://localhost:3001 | http://localhost:3001/api-docs |
 | Order Management | http://localhost:3002 | http://localhost:3002/api-docs |
-| Billing & Payments | http://localhost:3003 | http://localhost:3003/health |
 | RabbitMQ Management | http://localhost:15672 | admin/password |
 
 ## 📋 Features
@@ -83,11 +81,6 @@ ByteRisto follows a microservices architecture with the following key components
 - ✅ Real-time order updates via message queues
 - ✅ Order cancellation with reasons
 
-### Billing & Payments
-- 🚧 Invoice generation
-- 🚧 Payment processing
-- 🚧 Receipt management
-- 🚧 Tax calculations
 
 ### Infrastructure Features
 - ✅ Microservices architecture
@@ -161,7 +154,6 @@ ByteRisto supports different staff roles with appropriate access levels:
 ### Manager
 - Full access to all services
 - Manage menu items and pricing
-- Access billing information
 
 ### Administrator
 - System administration
@@ -178,9 +170,6 @@ The system uses RabbitMQ for asynchronous communication between services:
 - `order_updated` - Order status changed
 - `order_cancelled` - Order cancelled
 
-### Billing Events
-- `billing_request` - Invoice generation requested
-- `payment_processed` - Payment completed
 
 ## 📊 Database Schema
 
@@ -191,9 +180,6 @@ The system uses RabbitMQ for asynchronous communication between services:
 - `orders` - Order information
 - `order_items` - Individual order items
 
-### Billing & Payments Service
-- `invoices` - Billing information
-- `payments` - Payment transactions
 
 ## 🐳 Docker Configuration
 

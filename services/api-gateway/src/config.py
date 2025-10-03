@@ -8,7 +8,6 @@ class Config:
     # External services
     MENU_SERVICE_URL = os.environ.get('MENU_SERVICE_URL', 'http://localhost:3001')
     ORDER_SERVICE_URL = os.environ.get('ORDER_SERVICE_URL', 'http://localhost:3002')
-    BILLING_SERVICE_URL = os.environ.get('BILLING_SERVICE_URL', 'http://localhost:3003')
     
     # Flask settings
     PORT = int(os.environ.get('PORT', 3000))
