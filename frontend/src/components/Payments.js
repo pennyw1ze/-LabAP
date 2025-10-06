@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getOrders, formatOrderStatus, formatOrderType, calculateOrderTiming } from '../api/orderApi';
+import { getOrders, payOrder, formatOrderStatus, formatOrderType, calculateOrderTiming } from '../api/orderApi';
 
 export default function Payments() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTable, setSelectedTable] = useState('');
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [processingPayment, setProcessingPayment] = useState(null);
 
   useEffect(() => {
     loadOrders();
@@ -24,7 +26,7 @@ export default function Payments() {
   const loadOrders = async () => {
     try {
       const filters = {
-        status: 'ready' // Solo ordini pronti per il pagamento
+        status: 'ready' // Solo ordini pronti per il pagamento (delivered = già pagato)
       };
 
       if (selectedTable) {
@@ -40,17 +42,47 @@ export default function Payments() {
     }
   };
 
-  const handlePayment = async (orderId) => {
+  const handlePayment = async (orderId, orderAmount) => {
     try {
-      // Qui dovrai implementare la logica di pagamento
-      // Per ora mostro solo un alert
-      alert(`Elaborazione pagamento per ordine ${orderId}...`);
+      setProcessingPayment(orderId);
       
-      // Dopo il pagamento, ricarica la lista
-      loadOrders();
+      // Get payment amount from user if cash payment
+      let paymentAmount = orderAmount;
+      if (paymentMethod === 'cash') {
+        const input = prompt(`Importo ordine: €${orderAmount}\nInserisci l'importo ricevuto:`);
+        if (input === null) {
+          setProcessingPayment(null);
+          return; // User cancelled
+        }
+        paymentAmount = parseFloat(input);
+        if (isNaN(paymentAmount) || paymentAmount < orderAmount) {
+          alert('Importo non valido o insufficiente');
+          setProcessingPayment(null);
+          return;
+        }
+      }
+      
+      // Mark order as paid (no actual payment processing)
+      const result = await payOrder(orderId, {
+        payment_method: paymentMethod,
+        payment_amount: paymentAmount
+      });
+      
+      // Show success message with change if applicable
+      if (paymentMethod === 'cash' && paymentAmount > orderAmount) {
+        const change = paymentAmount - orderAmount;
+        alert(`Pagamento completato!\nResto: €${change.toFixed(2)}`);
+      } else {
+        alert('Pagamento completato con successo!');
+      }
+      
+      // Reload orders
+      await loadOrders();
     } catch (error) {
       console.error('Error processing payment:', error);
       alert('Errore nel processare il pagamento: ' + error.message);
+    } finally {
+      setProcessingPayment(null);
     }
   };
 
@@ -60,6 +92,7 @@ export default function Payments() {
       preparing: '#ff5722',
       ready: '#34c759',
       delivered: '#8e8e93',
+      payed: '#30d158',
       cancelled: '#ff453a'
     };
     return colors[status] || '#8e8e93';
@@ -138,6 +171,22 @@ export default function Payments() {
             </select>
           </div>
 
+          <div className="form-field form-field--compact">
+            <label className="form-label" htmlFor="payment-method">
+              Metodo di Pagamento
+            </label>
+            <select
+              id="payment-method"
+              className="select-glass"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            >
+              <option value="cash">💵 Contanti</option>
+              <option value="card">💳 Carta</option>
+              <option value="other">📱 Altro</option>
+            </select>
+          </div>
+
           <span className="active-orders__count">{filteredOrders.length} ordini pronti</span>
         </div>
       </section>
@@ -213,6 +262,15 @@ export default function Payments() {
                 <div>
                   <div className="active-orders__footer-total">Totale: €{order.final_amount}</div>
                 </div>
+                <button
+                  type="button"
+                  className="button-glass button-glass--success"
+                  onClick={() => handlePayment(order.id, parseFloat(order.final_amount))}
+                  disabled={processingPayment === order.id}
+                  style={{ minWidth: '140px' }}
+                >
+                  {processingPayment === order.id ? '⏳ Elaborazione...' : '💰 Paga Ora'}
+                </button>
               </footer>
             </article>
           );
@@ -231,18 +289,38 @@ export default function Payments() {
             <button
               type="button"
               className="button-glass button-glass--success"
-              onClick={() => {
+              onClick={async () => {
                 if (filteredOrders.length === 0) {
                   alert('Non ci sono ordini da pagare');
                   return;
                 }
+                
                 const totalAmount = filteredOrders.reduce((total, order) => total + parseFloat(order.final_amount), 0).toFixed(2);
-                alert(`Elaborazione pagamento totale di €${totalAmount} per ${filteredOrders.length} ordini...`);
-                loadOrders();
+                
+                if (!window.confirm(`Confermi il pagamento di €${totalAmount} per ${filteredOrders.length} ordini?`)) {
+                  return;
+                }
+                
+                try {
+                  // Process all payments
+                  for (const order of filteredOrders) {
+                    await payOrder(order.id, {
+                      payment_method: paymentMethod,
+                      payment_amount: parseFloat(order.final_amount)
+                    });
+                  }
+                  
+                  alert(`Tutti i pagamenti completati con successo! Totale: €${totalAmount}`);
+                  await loadOrders();
+                } catch (error) {
+                  console.error('Error processing batch payment:', error);
+                  alert('Errore nel processare i pagamenti: ' + error.message);
+                }
               }}
+              disabled={filteredOrders.length === 0 || processingPayment !== null}
               style={{ width: '100%', height: '60px', fontSize: '1.1em' }}
             >
-              💰 Paga Ora!
+              💰 Paga Tutti ({filteredOrders.length})
             </button>
           </div>
         </div>

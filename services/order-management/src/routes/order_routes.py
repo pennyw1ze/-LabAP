@@ -270,7 +270,7 @@ def update_order_status(order_id):
             }), 400
         
         # Validate status
-        valid_statuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled']
+        valid_statuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'payed', 'cancelled']
         if new_status not in valid_statuses:
             return jsonify({
                 'success': False,
@@ -517,5 +517,119 @@ def delete_order(order_id):
         return jsonify({
             'success': False,
             'message': 'Error deleting order',
+            'error': str(e)
+        }), 500
+
+
+@order_bp.route('/<string:order_id>/pay', methods=['POST'])
+def pay_order(order_id):
+    """Mark order as paid"""
+    try:
+        # Validate UUID format
+        try:
+            import uuid
+            uuid.UUID(order_id)
+        except ValueError:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid order ID format'
+            }), 400
+        
+        # Find order using raw SQL (SQLite compatible)
+        from sqlalchemy import text
+        result = db.session.execute(
+            text("SELECT * FROM orders WHERE id = :order_id"),
+            {'order_id': order_id}
+        ).fetchone()
+        
+        if not result:
+            return jsonify({
+                'success': False,
+                'message': 'Order not found'
+            }), 404
+        
+        # Check if order is in a payable status (ready or delivered)
+        if result.status not in ['ready', 'delivered']:
+            return jsonify({
+                'success': False,
+                'message': f'Order must be ready or delivered to be paid. Current status: {result.status}'
+            }), 400
+        
+        data = request.json or {}
+        payment_method = data.get('payment_method', 'cash')  # cash, card, or other
+        payment_amount = data.get('payment_amount')
+        
+        # Validate payment amount if provided
+        if payment_amount is not None:
+            try:
+                payment_amount = float(payment_amount)
+                if payment_amount < float(result.final_amount):
+                    return jsonify({
+                        'success': False,
+                        'message': f'Payment amount (€{payment_amount}) is less than order total (€{result.final_amount})'
+                    }), 400
+            except ValueError:
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid payment amount'
+                }), 400
+        
+        print(f"Processing payment for order {order_id} - Method: {payment_method}, Amount: €{result.final_amount}")
+        
+        # Update order status to payed
+        db.session.execute(
+            text("UPDATE orders SET status = 'payed', updated_at = CURRENT_TIMESTAMP WHERE id = :order_id"),
+            {'order_id': order_id}
+        )
+        
+        db.session.commit()
+        
+        print(f"Order marked as payed successfully")
+        
+        # Get updated order data
+        updated_order = db.session.execute(
+            text("SELECT * FROM orders WHERE id = :order_id"),
+            {'order_id': order_id}
+        ).fetchone()
+        
+        # Get order items
+        items_result = db.session.execute(
+            text("SELECT * FROM order_items WHERE order_id = :order_id ORDER BY created_at"),
+            {'order_id': order_id}
+        ).fetchall()
+        
+        # Convert to dict format
+        order_dict = dict(updated_order._mapping)
+        order_dict['id'] = str(order_dict['id'])
+        
+        items_dict = []
+        for item in items_result:
+            item_dict = dict(item._mapping)
+            item_dict['id'] = str(item_dict['id'])
+            item_dict['order_id'] = str(item_dict['order_id'])
+            item_dict['menu_item_id'] = str(item_dict['menu_item_id'])
+            items_dict.append(item_dict)
+        
+        order_dict['items'] = items_dict
+        
+        return jsonify({
+            'success': True,
+            'message': 'Payment processed successfully',
+            'data': order_dict,
+            'payment_info': {
+                'method': payment_method,
+                'amount': float(result.final_amount),
+                'change': payment_amount - float(result.final_amount) if payment_amount else 0
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in pay_order: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': 'Error processing payment',
             'error': str(e)
         }), 500

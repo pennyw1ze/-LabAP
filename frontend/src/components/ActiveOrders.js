@@ -61,6 +61,7 @@ export default function ActiveOrders() {
       preparing: '#ff5722',
       ready: '#34c759',
       delivered: '#8e8e93',
+      payed: '#30d158',
       cancelled: '#ff453a'
     };
     return colors[status] || '#8e8e93';
@@ -152,6 +153,7 @@ export default function ActiveOrders() {
               <option value="confirmed">Confermati</option>
               <option value="preparing">In preparazione</option>
               <option value="ready">Pronti</option>
+              <option value="delivered">Pagati/Consegnati</option>
               <option value="cancelled">Annullati</option>
             </select>
           </div>
@@ -299,7 +301,7 @@ export default function ActiveOrders() {
             <div className="active-orders__summary-value">
               {orders.filter(o => o.status === 'delivered').length}
             </div>
-            <div className="active-orders__summary-label">Consegnati</div>
+            <div className="active-orders__summary-label">Pagati/Consegnati</div>
           </div>
           <div className="active-orders__summary-card">
             <div className="active-orders__summary-value">
