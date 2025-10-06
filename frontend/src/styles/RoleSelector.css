@@ -1,0 +1,169 @@
+.role-selector-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.12), rgba(90, 200, 250, 0.08));
+  backdrop-filter: blur(calc(var(--blur-strength) * 1.2));
+  -webkit-backdrop-filter: blur(calc(var(--blur-strength) * 1.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(20px, 5vw, 40px);
+  z-index: 2000;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.role-selector {
+  width: 100%;
+  max-width: 900px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.55));
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 30px 60px -20px rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(calc(var(--blur-strength) * 0.8));
+  -webkit-backdrop-filter: blur(calc(var(--blur-strength) * 0.8));
+  padding: clamp(32px, 5vw, 48px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(32px, 5vw, 40px);
+  animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.role-selector__header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.role-selector__title {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.role-selector__subtitle {
+  margin: 0;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.role-selector__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: clamp(16px, 3vw, 24px);
+}
+
+.role-selector__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(24px, 4vw, 32px);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.45));
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 12px 24px -16px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(calc(var(--blur-strength) * 0.5));
+  -webkit-backdrop-filter: blur(calc(var(--blur-strength) * 0.5));
+}
+
+.role-selector__card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px -20px rgba(15, 23, 42, 0.45);
+  border-color: rgba(255, 255, 255, 0.75);
+}
+
+.role-selector__card:active {
+  transform: translateY(-3px);
+}
+
+.role-selector__card--blue:hover {
+  background: linear-gradient(145deg, rgba(0, 122, 255, 0.25), rgba(90, 200, 250, 0.15));
+  border-color: rgba(0, 122, 255, 0.45);
+}
+
+.role-selector__card--green:hover {
+  background: linear-gradient(145deg, rgba(48, 209, 88, 0.25), rgba(50, 215, 75, 0.15));
+  border-color: rgba(48, 209, 88, 0.45);
+}
+
+.role-selector__card--orange:hover {
+  background: linear-gradient(145deg, rgba(255, 159, 10, 0.25), rgba(255, 204, 0, 0.15));
+  border-color: rgba(255, 159, 10, 0.45);
+}
+
+.role-selector__card--purple:hover {
+  background: linear-gradient(145deg, rgba(175, 82, 222, 0.25), rgba(191, 90, 242, 0.15));
+  border-color: rgba(175, 82, 222, 0.45);
+}
+
+.role-selector__icon {
+  font-size: clamp(3rem, 6vw, 4rem);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.role-selector__label {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.role-selector__description {
+  margin: 0;
+  font-size: clamp(0.85rem, 1.5vw, 0.95rem);
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.role-selector__footer {
+  text-align: center;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.role-selector__footer .text-muted {
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 768px) {
+  .role-selector__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .role-selector__grid {
+    grid-template-columns: 1fr;
+  }
+}

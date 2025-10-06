@@ -10,8 +10,10 @@ import Payments from './components/Payments';
 import OrderTaking from './components/OrderTaking';
 import KitchenDisplay from './components/KitchenDisplay';
 import ActiveOrders from './components/ActiveOrders';
+import RoleSelector from './components/RoleSelector';
 
 function App() {
+  const [userRole, setUserRole] = useState(null);
   const [activeTab, setActiveTab] = useState('menu');
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
@@ -20,16 +22,59 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Role-based tab configuration
+  const rolePermissions = {
+    client: ['menu'],
+    waiter: ['menu', 'menuManagement', 'orderTaking', 'activeOrders'],
+    chef: ['menu', 'menuManagement', 'kitchen'],
+    cashier: ['menu', 'activeOrders', 'payments']
+  };
+
+  // Handle role selection
+  const handleRoleSelection = (role) => {
+    setUserRole(role);
+    // Set the first available tab for the selected role
+    const allowedTabs = rolePermissions[role];
+    if (allowedTabs && allowedTabs.length > 0) {
+      setActiveTab(allowedTabs[0]);
+    }
+  };
+
+  // Handle role change
+  const handleChangeRole = () => {
+    setUserRole(null);
+    setActiveTab('menu');
+  };
+
+  // Get role display name
+  const getRoleDisplayName = (role) => {
+    const roleNames = {
+      client: '👤 Cliente',
+      waiter: '🧑‍🍳 Cameriere',
+      chef: '👨‍🍳 Chef',
+      cashier: '💰 Cassiere'
+    };
+    return roleNames[role] || role;
+  };
+
+  // Show role selector if no role is selected
+  if (!userRole) {
+    return <RoleSelector onSelectRole={handleRoleSelection} />;
+  }
+
   const tabs = [
-    { id: 'menu', label: '🍽️ Menu', component: <MenuDisplay /> },
-    { id: 'menuManagement', label: '🛠️ Gestione Menu', component: <MenuManagement /> },
-    { id: 'orderTaking', label: '📋 Presa Ordini', component: <OrderTaking /> },
-    { id: 'activeOrders', label: '📊 Ordini Attivi', component: <ActiveOrders /> },
-    { id: 'kitchen', label: '👨‍🍳 Cucina', component: <KitchenDisplay /> },
-    { id: 'payments', label: '💳 Pagamenti', component: <Payments /> },
+    { id: 'menu', label: '🍽️ Menu', component: <MenuDisplay />, roles: ['client', 'waiter', 'chef', 'cashier'] },
+    { id: 'menuManagement', label: '🛠️ Gestione Menu', component: <MenuManagement />, roles: ['waiter', 'chef'] },
+    { id: 'orderTaking', label: '📋 Presa Ordini', component: <OrderTaking />, roles: ['waiter'] },
+    { id: 'activeOrders', label: '📊 Ordini Attivi', component: <ActiveOrders />, roles: ['waiter', 'cashier'] },
+    { id: 'kitchen', label: '👨‍🍳 Cucina', component: <KitchenDisplay />, roles: ['chef'] },
+    { id: 'payments', label: '💳 Pagamenti', component: <Payments />, roles: ['cashier'] },
   ];
 
-  const activeComponent = tabs.find(tab => tab.id === activeTab)?.component;
+  // Filter tabs based on user role
+  const availableTabs = tabs.filter(tab => tab.roles.includes(userRole));
+
+  const activeComponent = availableTabs.find(tab => tab.id === activeTab)?.component;
 
   return (
     <div className="App">
@@ -51,13 +96,20 @@ function App() {
                   second: '2-digit'
                 })}
               </span>
-              <span className="app-status-pill">🔥 Sistema Attivo</span>
+              <span className="app-status-pill">{getRoleDisplayName(userRole)}</span>
+              <button 
+                className="button-glass button-glass--warning"
+                onClick={handleChangeRole}
+                style={{ padding: '6px 14px', fontSize: '0.85rem' }}
+              >
+                Cambia Ruolo
+              </button>
             </div>
           </div>
 
           <div className="app-topbar__tabs">
             <div className="app-tabs__inner">
-              {tabs.map(tab => (
+              {availableTabs.map(tab => (
                 <button
                   key={tab.id}
                   type="button"
