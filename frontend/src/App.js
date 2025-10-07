@@ -72,7 +72,10 @@ function App() {
   ];
 
   // Filter tabs based on user role
-  const availableTabs = tabs.filter(tab => tab.roles.includes(userRole));
+  const availableTabs = tabs.filter(tab => {
+    const allowedTabs = rolePermissions[userRole] || [];
+    return allowedTabs.includes(tab.id);
+  });
 
   const activeComponent = availableTabs.find(tab => tab.id === activeTab)?.component;
 
