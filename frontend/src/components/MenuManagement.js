@@ -272,7 +272,6 @@ export default function MenuManagement() {
         <div className="menu-management__header">
           <div>
             <h2>🛠️ Gestione Menu</h2>
-            <span className="text-muted">Aggiungi, modifica o rimuovi i piatti dal menu in un flusso unico.</span>
           </div>
           <div className="menu-management__filters">
             <button
@@ -407,11 +406,6 @@ export default function MenuManagement() {
           </form>
         )}
 
-        {!showAddForm && !editingItem && (
-          <div className="menu-management__empty-hint text-muted">
-            Premi "Nuovo Piatto" per aggiungere un elemento oppure modifica un piatto dalla tabella.
-          </div>
-        )}
       </section>
 
       <section className="menu-management__panel menu-management__panel--legacy">

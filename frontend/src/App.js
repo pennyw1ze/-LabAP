@@ -63,12 +63,12 @@ function App() {
   }
 
   const tabs = [
-    { id: 'menu', label: '🍽️ Menu', component: <MenuDisplay />, roles: ['client', 'waiter', 'chef', 'cashier'] },
-    { id: 'menuManagement', label: '🛠️ Gestione Menu', component: <MenuManagement />, roles: ['waiter', 'chef'] },
-    { id: 'orderTaking', label: '📋 Presa Ordini', component: <OrderTaking />, roles: ['waiter'] },
-    { id: 'activeOrders', label: '📊 Ordini Attivi', component: <ActiveOrders />, roles: ['waiter', 'cashier'] },
-    { id: 'kitchen', label: '👨‍🍳 Cucina', component: <KitchenDisplay />, roles: ['chef'] },
-    { id: 'payments', label: '💳 Pagamenti', component: <Payments />, roles: ['cashier'] },
+    { id: 'menu', label: '🍽️ Menu', component: <MenuDisplay /> },
+    { id: 'menuManagement', label: '🛠️ Gestione Menu', component: <MenuManagement /> },
+    { id: 'orderTaking', label: '📋 Presa Ordini', component: <OrderTaking /> },
+    { id: 'activeOrders', label: '📊 Gestione Ordini', component: <ActiveOrders /> },
+    { id: 'kitchen', label: '👨‍🍳 Cucina', component: <KitchenDisplay /> },
+    { id: 'payments', label: '💳 Pagamenti', component: <Payments /> },
   ];
 
   // Filter tabs based on user role
