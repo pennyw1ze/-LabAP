@@ -18,18 +18,18 @@ function RoleSelector({ onSelectRole }) {
       color: 'green'
     },
     {
-      id: 'chef',
-      label: 'Chef',
-      icon: '👨‍🍳',
-      description: 'Gestione cucina e menu',
-      color: 'orange'
-    },
-    {
       id: 'cashier',
       label: 'Cassiere',
       icon: '💰',
       description: 'Gestione pagamenti',
       color: 'purple'
+    },
+    {
+      id: 'chef',
+      label: 'Chef',
+      icon: '👨‍🍳',
+      description: 'Gestione cucina e menu',
+      color: 'orange'
     }
   ];
 
