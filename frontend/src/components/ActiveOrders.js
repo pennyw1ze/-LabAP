@@ -57,11 +57,11 @@ export default function ActiveOrders() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: '#ff9f0a',
       confirmed: '#0a84ff',
       preparing: '#ff5722',
       ready: '#34c759',
       delivered: '#8e8e93',
+      payed: '#30d158',
       cancelled: '#ff453a'
     };
     return colors[status] || '#8e8e93';
@@ -83,40 +83,8 @@ export default function ActiveOrders() {
     const actions = [];
 
     switch (order.status) {
-      case 'pending':
-        actions.push(
-          <button
-            key="confirm"
-            type="button"
-            className="button-glass button-glass--primary"
-            onClick={() => handleStatusUpdate(order.id, 'confirmed')}
-          >
-            ✅ Conferma
-          </button>
-        );
-        actions.push(
-          <button
-            key="cancel"
-            type="button"
-            className="button-glass button-glass--danger"
-            onClick={() => handleStatusUpdate(order.id, 'cancelled')}
-          >
-            ❌ Annulla
-          </button>
-        );
-        break;
-
       case 'ready':
-        actions.push(
-          <button
-            key="deliver"
-            type="button"
-            className="button-glass button-glass--success"
-            onClick={() => handleStatusUpdate(order.id, 'delivered')}
-          >
-            📦 Consegna
-          </button>
-        );
+        // Nessuna azione per ordini pronti
         break;
 
       default:
@@ -181,7 +149,6 @@ export default function ActiveOrders() {
             >
               <option value="all">Tutti gli ordini</option>
               <option value="active">Ordini attivi</option>
-              <option value="pending">In attesa</option>
               <option value="confirmed">Confermati</option>
               <option value="preparing">In preparazione</option>
               <option value="ready">Pronti</option>
@@ -248,18 +215,20 @@ export default function ActiveOrders() {
               </header>
 
               <div className="active-orders__card-body">
-                <div className={`active-orders__timing ${timing.isOverdue ? 'active-orders__timing--overdue' : ''}`}>
-                  <span>
-                    Ordinato {timing.elapsedMinutes} min fa • {new Date(order.created_at).toLocaleTimeString('it-IT')}
-                  </span>
-                  {timing.estimatedRemainingMinutes !== null && (
-                    <span className={timing.isOverdue ? 'overdue' : 'text-muted'}>
-                      {timing.isOverdue
-                        ? `In ritardo di ${Math.abs(timing.estimatedRemainingMinutes)} min`
-                        : `Stima: ${timing.estimatedRemainingMinutes} min`}
+                {order.status !== 'ready' && (
+                  <div className={`active-orders__timing ${timing.isOverdue ? 'active-orders__timing--overdue' : ''}`}>
+                    <span>
+                      Ordinato {timing.elapsedMinutes} min fa • {new Date(order.created_at).toLocaleTimeString('it-IT')}
                     </span>
-                  )}
-                </div>
+                    {timing.estimatedRemainingMinutes !== null && (
+                      <span className={timing.isOverdue ? 'overdue' : 'text-muted'}>
+                        {timing.isOverdue
+                          ? `In ritardo di ${Math.abs(timing.estimatedRemainingMinutes)} min`
+                          : `Stima: ${timing.estimatedRemainingMinutes} min`}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <strong>Piatti ({order.items.length})</strong>
@@ -296,9 +265,6 @@ export default function ActiveOrders() {
               <footer className="active-orders__footer">
                 <div>
                   <div className="active-orders__footer-total">Totale: €{order.final_amount}</div>
-                  {order.tax_amount > 0 && (
-                    <span className="text-muted">(IVA: €{order.tax_amount})</span>
-                  )}
                 </div>
                 <div className="active-orders__actions">
                   {getStatusActions(order)}
@@ -312,12 +278,6 @@ export default function ActiveOrders() {
       <section className="glass-card active-orders__summary">
         <h3>📊 Riepilogo</h3>
         <div className="active-orders__summary-grid">
-          <div className="active-orders__summary-card">
-            <div className="active-orders__summary-value">
-              {orders.filter(o => o.status === 'pending').length}
-            </div>
-            <div className="active-orders__summary-label">In Attesa</div>
-          </div>
           <div className="active-orders__summary-card">
             <div className="active-orders__summary-value">
               {orders.filter(o => o.status === 'confirmed').length}
@@ -340,7 +300,7 @@ export default function ActiveOrders() {
             <div className="active-orders__summary-value">
               {orders.filter(o => o.status === 'delivered').length}
             </div>
-            <div className="active-orders__summary-label">Consegnati</div>
+            <div className="active-orders__summary-label">Pagati/Consegnati</div>
           </div>
           <div className="active-orders__summary-card">
             <div className="active-orders__summary-value">

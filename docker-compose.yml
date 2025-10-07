@@ -114,6 +114,19 @@ services:
       - order-management-service
     networks:
       - byteristo-network
+  
+  # Frontend Service
+  frontend:
+    build: ./frontend
+    container_name: byteristo-frontend
+    ports:
+      - "8080:80"
+    environment:
+      - REACT_APP_API_GATEWAY_URL=http://localhost:3000
+    depends_on:
+      - api-gateway
+    networks:
+      - byteristo-network
 
 volumes:
   rabbitmq_data:

@@ -107,7 +107,7 @@ export async function getOrders() {
 export async function createOrder(orderData) {
   // Placeholder - da implementare quando avrai il microservizio orders
   console.log('Order would be created:', orderData);
-  return { id: 'temp-' + Date.now(), ...orderData, status: 'pending' };
+  return { id: 'temp-' + Date.now(), ...orderData, status: 'confirmed' };
 }
 
 // --- Payments (placeholder for other microservices) ---

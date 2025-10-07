@@ -116,6 +116,37 @@ export const updateOrderItemStatus = async (orderId, itemId, status) => {
   }
 };
 
+export const payOrder = async (orderId, paymentData = {}) => {
+  try {
+    // Update the order status to 'delivered' (represents paid and completed)
+    const response = await fetch(`${ORDER_SERVICE_URL}/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status: 'delivered' }),
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.message);
+    }
+    
+    return {
+      success: true,
+      data: data.data,
+      payment_info: {
+        payment_method: paymentData.payment_method || 'cash',
+        payment_amount: paymentData.payment_amount || 0,
+        change: paymentData.payment_amount ? Math.max(0, paymentData.payment_amount - parseFloat(data.data.final_amount || 0)) : 0
+      }
+    };
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
 export const getKitchenOrders = async () => {
   try {
     const response = await fetch(`${ORDER_SERVICE_URL}/orders/kitchen`);
@@ -176,11 +207,11 @@ export const createMenuItem = async (menuItemData) => {
 
 export const formatOrderStatus = (status) => {
   const statusLabels = {
-    'pending': 'In Attesa',
     'confirmed': 'Confermato',
     'preparing': 'In Preparazione',
     'ready': 'Pronto',
     'delivered': 'Consegnato',
+    'payed': 'Pagato',
     'cancelled': 'Annullato'
   };
   
