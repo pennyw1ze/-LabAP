@@ -210,7 +210,7 @@ ByteRisto follows a **microservices architecture** with the following components
 
 ---
 
-### 6. System Administration Stories
+### 6. System User Stories
 
 #### Story 6.1: Auto-Refresh Data
 **As a** system user  
@@ -224,7 +224,7 @@ ByteRisto follows a **microservices architecture** with the following components
 
 #### Story 6.3: Switch Between User Roles
 **As a** system user  
-**I want to** access all system roles (customer, waiter, chef, cashier)  
+**I want to** access all system roles (customer, waiter, chef, cashier and manager)  
 **So that** I can oversee all operational aspects
 
 ---
