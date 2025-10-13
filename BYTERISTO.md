@@ -47,136 +47,184 @@ ByteRisto follows a **microservices architecture** with the following components
 
 ### 1. Customer Stories
 
-#### Story 1.1: View Menu
+#### Story 1.1: View All Menu Items
 **As a** customer  
-**I want to** view the restaurant menu with items, descriptions, and prices  
-**So that** I can decide what to order
+**I want to** view all restaurant menu items with descriptions and prices  
+**So that** I can see the complete selection available
 
-**Acceptance Criteria:**
-- Menu displays all available items organized by categories
-- Each item shows name, description, price, and allergen information
-- Unavailable items are clearly marked or hidden
-- Menu is responsive and works on mobile devices
-
-#### Story 1.2: Browse Menu Categories
+#### Story 1.2: Browse Appetizers
 **As a** customer  
-**I want to** browse menu items by categories (appetizers, mains, desserts, beverages)  
-**So that** I can easily find the type of food I'm looking for
+**I want to** filter and view only appetizer menu items  
+**So that** I can choose starters for my meal
 
-**Acceptance Criteria:**
-- Menu is organized into clear categories
-- Category navigation is intuitive and accessible
-- Items within categories are logically ordered
+#### Story 1.3: Browse Main Dishes
+**As a** customer  
+**I want to** filter and view only main course items  
+**So that** I can select my primary course
+
+#### Story 1.4: Browse Desserts
+**As a** customer  
+**I want to** filter and view only dessert menu items  
+**So that** I can choose a sweet ending to my meal
+
+#### Story 1.5: Browse Beverages
+**As a** customer  
+**I want to** filter and view only beverage options  
+**So that** I can select drinks to accompany my meal
+
+#### Story 1.6: Browse Side Dishes
+**As a** customer  
+**I want to** filter and view only side dish options  
+**So that** I can complement my main course
+
+#### Story 1.7: View Menu Item Details
+**As a** customer  
+**I want to** see detailed information about each menu item including allergens and nutritional info  
+**So that** I can make informed dietary choices
 
 ---
 
 ### 2. Waiter Stories
 
-#### Story 2.1: Take Customer Orders
+#### Story 2.1: Take New Order
 **As a** waiter  
-**I want to** take customer orders through the system  
-**So that** orders are accurately recorded and sent to the kitchen
+**I want to** create a new order for a specific table  
+**So that** I can start recording customer requests
 
-**Acceptance Criteria:**
-- Can select items from the menu for customer orders
-- Can specify quantity and special instructions for each item
-- Order total is automatically calculated
-- Order is immediately transmitted to kitchen display
-
-#### Story 2.2: Manage Active Orders
+#### Story 2.2: Add Items to Order
 **As a** waiter  
-**I want to** view and track all active orders at my tables  
-**So that** I can provide updates to customers and ensure timely service
+**I want to** add menu items with quantities to an order  
+**So that** I can build the complete customer order
 
-**Acceptance Criteria:**
-- Can view all orders with their current status
-- Orders show preparation time estimates
-- Can update order status when serving customers
-- Notifications when orders are ready for pickup
-
-#### Story 2.3: Modify Menu Items
+#### Story 2.3: Add Special Instructions
 **As a** waiter  
-**I want to** add, edit, or remove menu items  
-**So that** the menu stays current with available ingredients and seasonal changes
+**I want to** add special cooking instructions for menu items  
+**So that** the kitchen knows about customer preferences
 
-**Acceptance Criteria:**
-- Can create new menu items with all required information
-- Can edit existing items including prices and descriptions
-- Can mark items as unavailable without deleting them
-- Changes are immediately reflected across all systems
+#### Story 2.4: View Active Orders by Status
+**As a** waiter  
+**I want to** filter orders by status (confirmed, preparing, ready)  
+**So that** I can track orders at different stages
+
+#### Story 2.5: View Orders by Table
+**As a** waiter  
+**I want to** filter orders by table number  
+**So that** I can focus on specific tables I'm serving
+
+#### Story 2.6: Track Order Timing
+**As a** waiter  
+**I want to** see elapsed time and estimated completion for orders  
+**So that** I can manage customer expectations
+
+#### Story 2.7: Create Menu Items
+**As a** waiter  
+**I want to** add new items to the menu with complete details  
+**So that** new dishes become available for ordering
+
+#### Story 2.8: Edit Menu Item Details
+**As a** waiter  
+**I want to** modify existing menu items' information and pricing  
+**So that** menu information stays current and accurate
+
+#### Story 2.9: Toggle Menu Item Availability
+**As a** waiter  
+**I want to** mark menu items as available or unavailable  
+**So that** customers cannot order unavailable items
+
+#### Story 2.10: Cancel Orders
+**As a** waiter  
+**I want to** cancel orders when requested by customers  
+**So that** incorrect or unwanted orders can be removed
 
 ---
 
 ### 3. Chef Stories
 
-#### Story 3.1: View Kitchen Orders
+#### Story 3.1: View Kitchen Queue
 **As a** chef  
-**I want to** view incoming orders on a kitchen display  
-**So that** I can prioritize and prepare orders efficiently
+**I want to** see all incoming orders in chronological order  
+**So that** I can prioritize preparation efficiently
 
-**Acceptance Criteria:**
-- Orders appear in chronological order on kitchen display
-- Each order shows items, quantities, special instructions, and timing
-- Orders are automatically prioritized by preparation time
-- Completed orders can be marked as ready
-
-#### Story 3.2: Update Order Status
+#### Story 3.2: Start Order Preparation
 **As a** chef  
-**I want to** update order preparation status  
-**So that** waiters and customers know when food is ready
+**I want to** mark confirmed orders as "preparing"  
+**So that** staff knows I've started cooking
 
-**Acceptance Criteria:**
-- Can mark orders as "in preparation", "ready for pickup", or "completed"
-- Status updates are immediately visible to waiters
-- Preparation time tracking for performance metrics
-
-#### Story 3.3: Manage Menu Availability
+#### Story 3.3: Mark Orders Ready
 **As a** chef  
-**I want to** quickly mark menu items as unavailable when ingredients run out  
-**So that** customers cannot order items we cannot prepare
+**I want to** change preparing orders to "ready" status  
+**So that** waiters know food is ready for pickup
 
-**Acceptance Criteria:**
-- Can instantly toggle item availability from kitchen interface
-- Unavailable items are immediately hidden from customer menu
-- Can add preparation time estimates for menu items
+#### Story 3.4: View Order Details
+**As a** chef  
+**I want to** see complete order details including special instructions  
+**So that** I can prepare dishes according to customer requests
+
+#### Story 3.5: Manage Kitchen Display
+**As a** chef  
+**I want to** filter orders by preparation status on kitchen display  
+**So that** I can focus on orders at specific cooking stages
 
 ---
 
 ### 4. Cashier Stories
 
-#### Story 4.1: Process Payments
+#### Story 4.1: View Ready Orders for Payment
 **As a** cashier  
-**I want to** process customer payments for completed orders  
-**So that** transactions are recorded and orders can be closed
+**I want to** see only orders with "ready" status awaiting payment  
+**So that** I can process completed orders efficiently
 
-**Acceptance Criteria:**
-- Can view completed orders awaiting payment
-- Can process cash, card, and digital payments
-- Payment records are stored with order details
-- Orders are marked as "paid" after successful payment
-
-#### Story 4.2: View Order History
+#### Story 4.2: Process Cash Payments
 **As a** cashier  
-**I want to** access order history and payment records  
-**So that** I can handle customer inquiries and generate reports
+**I want to** select cash as payment method and complete transactions  
+**So that** I can handle cash payments from customers
 
-**Acceptance Criteria:**
-- Can search orders by date, table number, or amount
-- Payment history includes payment method and timestamps
-- Can generate daily/weekly revenue reports
+#### Story 4.3: Process Card Payments
+**As a** cashier  
+**I want to** select card as payment method for transactions  
+**So that** I can handle credit/debit card payments
+
+#### Story 4.4: Filter Orders by Table for Payment
+**As a** cashier  
+**I want to** filter payment-ready orders by table number  
+**So that** I can quickly find orders for specific customers
+
+#### Story 4.5: View Order Payment Summary
+**As a** cashier  
+**I want to** see detailed order breakdown with total amounts  
+**So that** I can verify charges before processing payment
 
 ---
 
 ### 5. Manager Stories
 
-#### Story 5.1: Access All System Functions
+#### Story 5.1: Switch Between User Roles
 **As a** manager  
-**I want to** access all system features and reports  
-**So that** I can oversee restaurant operations effectively
+**I want to** access all system roles (customer, waiter, chef, cashier)  
+**So that** I can oversee all operational aspects
 
-**Acceptance Criteria:**
-- Can switch between all user roles and their functions
-- Access to comprehensive reporting dashboard
-- Can override system restrictions when necessary
+#### Story 5.2: Monitor Order Flow
+**As a** manager  
+**I want to** view real-time order statistics and counts  
+**So that** I can track restaurant performance
+
+#### Story 5.3: Access Complete Order History
+**As a** manager  
+**I want to** view all historical orders regardless of status  
+**So that** I can analyze past performance and trends
+
+---
+
+### 6. System Administration Stories
+
+#### Story 6.1: Auto-Refresh Data
+**As a** system user  
+**I want to** enable automatic refresh of order data  
+**So that** I always see current information without manual updates
+
+#### Story 6.2: Manual Data Refresh
+**As a** system user  
+**I want to** manually refresh order and menu data  
+**So that** I can get the latest information on demand
 
 ---

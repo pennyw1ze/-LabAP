@@ -46,21 +46,8 @@ export default function Payments() {
     try {
       setProcessingPayment(orderId);
       
-      // Get payment amount from user if cash payment
+      // Pagamento in contanti: nessuna logica di resto, si assume importo esatto
       let paymentAmount = orderAmount;
-      if (paymentMethod === 'cash') {
-        const input = prompt(`Importo ordine: €${orderAmount}\nInserisci l'importo ricevuto:`);
-        if (input === null) {
-          setProcessingPayment(null);
-          return; // User cancelled
-        }
-        paymentAmount = parseFloat(input);
-        if (isNaN(paymentAmount) || paymentAmount < orderAmount) {
-          alert('Importo non valido o insufficiente');
-          setProcessingPayment(null);
-          return;
-        }
-      }
       
       // Mark order as paid (no actual payment processing)
       const result = await payOrder(orderId, {
@@ -68,13 +55,7 @@ export default function Payments() {
         payment_amount: paymentAmount
       });
       
-      // Show success message with change if applicable
-      if (paymentMethod === 'cash' && paymentAmount > orderAmount) {
-        const change = paymentAmount - orderAmount;
-        alert(`Pagamento completato!\nResto: €${change.toFixed(2)}`);
-      } else {
-        alert('Pagamento completato con successo!');
-      }
+      alert('Pagamento completato con successo!');
       
       // Reload orders
       await loadOrders();
