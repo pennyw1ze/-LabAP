@@ -1,15 +1,19 @@
 .role-selector-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   background: linear-gradient(135deg, rgba(0, 122, 255, 0.12), rgba(90, 200, 250, 0.08));
   backdrop-filter: blur(calc(var(--blur-strength) * 1.2));
   -webkit-backdrop-filter: blur(calc(var(--blur-strength) * 1.2));
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(20px, 5vw, 40px);
+  padding: 20px;
   z-index: 2000;
   animation: fadeIn 0.4s ease;
+  overflow: auto;
 }
 
 @keyframes fadeIn {
@@ -23,18 +27,21 @@
 
 .role-selector {
   width: 100%;
-  max-width: 900px;
+  max-width: 800px;
+  max-height: 90vh;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.55));
   border: 1px solid rgba(255, 255, 255, 0.65);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 30px 60px -20px rgba(15, 23, 42, 0.4);
+  border-radius: 24px;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.3);
   backdrop-filter: blur(calc(var(--blur-strength) * 0.8));
   -webkit-backdrop-filter: blur(calc(var(--blur-strength) * 0.8));
-  padding: clamp(32px, 5vw, 48px);
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: clamp(32px, 5vw, 40px);
+  gap: 32px;
   animation: slideUp 0.5s ease;
+  margin: auto;
+  overflow-y: auto;
 }
 
 @keyframes slideUp {
@@ -73,7 +80,7 @@
 .role-selector__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-rows: repeat(3, auto);
   gap: clamp(16px, 3vw, 24px);
   max-width: 600px;
   margin: 0 auto;
@@ -126,6 +133,16 @@
   border-color: rgba(175, 82, 222, 0.45);
 }
 
+.role-selector__card--red:hover {
+  background: linear-gradient(145deg, rgba(255, 59, 48, 0.25), rgba(255, 69, 58, 0.15));
+  border-color: rgba(255, 59, 48, 0.45);
+}
+
+/* Layout specifico per griglia 2x3 */
+.role-selector__card--full-width {
+  grid-column: span 2;
+}
+
 .role-selector__icon {
   font-size: clamp(3rem, 6vw, 4rem);
   line-height: 1;
@@ -160,17 +177,38 @@
 }
 
 @media (max-width: 768px) {
+  .role-selector {
+    max-width: 600px;
+    padding: 24px;
+    gap: 24px;
+  }
+  
   .role-selector__grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-rows: repeat(3, auto);
     max-width: 480px;
   }
 }
 
 @media (max-width: 500px) {
+  .role-selector-overlay {
+    padding: 16px;
+  }
+  
+  .role-selector {
+    max-width: 400px;
+    padding: 20px;
+    gap: 20px;
+    border-radius: 16px;
+  }
+  
   .role-selector__grid {
     grid-template-columns: 1fr;
-    grid-template-rows: repeat(4, 1fr);
+    grid-template-rows: repeat(5, auto);
     max-width: 300px;
+  }
+  
+  .role-selector__card--full-width {
+    grid-column: span 1;
   }
 }

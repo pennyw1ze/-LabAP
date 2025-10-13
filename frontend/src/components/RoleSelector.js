@@ -30,6 +30,13 @@ function RoleSelector({ onSelectRole }) {
       icon: '💰',
       description: 'Gestione pagamenti',
       color: 'purple'
+    },
+    {
+      id: 'manager',
+      label: 'Manager',
+      icon: '👔',
+      description: 'Accesso completo al sistema',
+      color: 'red'
     }
   ];
 
@@ -45,7 +52,7 @@ function RoleSelector({ onSelectRole }) {
           {roles.map(role => (
             <button
               key={role.id}
-              className={`role-selector__card role-selector__card--${role.color}`}
+              className={`role-selector__card role-selector__card--${role.color} ${role.id === 'manager' ? 'role-selector__card--full-width' : ''}`}
               onClick={() => onSelectRole(role.id)}
             >
               <div className="role-selector__icon">{role.icon}</div>

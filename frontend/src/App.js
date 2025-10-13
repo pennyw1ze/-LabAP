@@ -27,7 +27,8 @@ function App() {
     client: ['menu'],
     waiter: ['menu', 'menuManagement', 'orderTaking', 'activeOrders'],
     chef: ['menu', 'menuManagement', 'kitchen'],
-    cashier: ['menu', 'activeOrders', 'payments']
+    cashier: ['menu', 'activeOrders', 'payments'],
+    manager: ['menu', 'menuManagement', 'orderTaking', 'activeOrders', 'kitchen', 'payments']
   };
 
   // Handle role selection
@@ -52,7 +53,8 @@ function App() {
       client: '👤 Cliente',
       waiter: '🧑‍🍳 Cameriere',
       chef: '👨‍🍳 Chef',
-      cashier: '💰 Cassiere'
+      cashier: '💰 Cassiere',
+      manager: '👔 Manager'
     };
     return roleNames[role] || role;
   };
