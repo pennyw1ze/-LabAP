@@ -152,7 +152,7 @@ export default function ActiveOrders() {
               <option value="confirmed">Confermati</option>
               <option value="preparing">In preparazione</option>
               <option value="ready">Pronti</option>
-              <option value="delivered">Consegnati</option>
+              <option value="delivered">Pagati</option>
               <option value="cancelled">Annullati</option>
             </select>
           </div>
@@ -216,16 +216,24 @@ export default function ActiveOrders() {
 
               <div className="active-orders__card-body">
                 {order.status !== 'ready' && (
-                  <div className={`active-orders__timing ${timing.isOverdue ? 'active-orders__timing--overdue' : ''}`}>
-                    <span>
-                      Ordinato {timing.elapsedMinutes} min fa • {new Date(order.created_at).toLocaleTimeString('it-IT')}
-                    </span>
-                    {timing.estimatedRemainingMinutes !== null && (
-                      <span className={timing.isOverdue ? 'overdue' : 'text-muted'}>
-                        {timing.isOverdue
-                          ? `In ritardo di ${Math.abs(timing.estimatedRemainingMinutes)} min`
-                          : `Stima: ${timing.estimatedRemainingMinutes} min`}
+                  <div className={`active-orders__timing ${order.status !== 'delivered' && timing.isOverdue ? 'active-orders__timing--overdue' : ''}`}>
+                    {order.status === 'delivered' ? (
+                      <span>
+                        Pagato il {new Date(order.created_at).toLocaleDateString('it-IT')} • {new Date(order.created_at).toLocaleTimeString('it-IT')}
                       </span>
+                    ) : (
+                      <>
+                        <span>
+                          Ordinato {timing.elapsedMinutes} min fa • {new Date(order.created_at).toLocaleTimeString('it-IT')}
+                        </span>
+                        {timing.estimatedRemainingMinutes !== null && (
+                          <span className={timing.isOverdue ? 'overdue' : 'text-muted'}>
+                            {timing.isOverdue
+                              ? `In ritardo di ${Math.abs(timing.estimatedRemainingMinutes)} min`
+                              : `Stima: ${timing.estimatedRemainingMinutes} min`}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
@@ -300,7 +308,7 @@ export default function ActiveOrders() {
             <div className="active-orders__summary-value">
               {orders.filter(o => o.status === 'delivered').length}
             </div>
-            <div className="active-orders__summary-label">Pagati/Consegnati</div>
+            <div className="active-orders__summary-label">Pagati</div>
           </div>
           <div className="active-orders__summary-card">
             <div className="active-orders__summary-value">

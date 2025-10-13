@@ -307,15 +307,6 @@ export default function KitchenDisplay() {
                         🔔 Ordine Pronto
                       </button>
                     )}
-                    {order.status === 'ready' && (
-                      <button
-                        type="button"
-                        className="button-glass"
-                        onClick={() => handleOrderStatusUpdate(order.id, 'delivered')}
-                      >
-                        📦 Consegnato
-                      </button>
-                    )}
                   </div>
                 </footer>
               </article>
