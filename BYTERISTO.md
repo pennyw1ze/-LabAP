@@ -131,10 +131,10 @@ ByteRisto follows a **microservices architecture** with the following components
 **I want to** mark menu items as available or unavailable  
 **So that** customers cannot order unavailable items
 
-#### Story 2.10: Cancel Orders
+#### Story 2.10: Delete Menu Item
 **As a** waiter  
-**I want to** cancel orders when requested by customers  
-**So that** incorrect or unwanted orders can be removed
+**I want to** delete a menu item when requested by a manager  
+**So that** the menu remains always updated
 
 ---
 
