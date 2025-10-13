@@ -120,11 +120,6 @@ export default function MenuDisplay() {
                     )}
                   </div>
                 )}
-
-                <div className="text-muted" style={{ fontSize: '0.8rem' }}>
-                  <strong>📝 Nota:</strong> La gestione degli ingredienti avviene ora manualmente. 
-                  Questa vista mostra i dati principali del menu; eventuali dettagli aggiuntivi possono essere gestiti tramite strumenti dedicati.
-                </div>
               </article>
             ))}
           </div>

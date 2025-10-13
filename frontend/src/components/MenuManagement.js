@@ -391,10 +391,6 @@ export default function MenuManagement() {
               />
             </div>
 
-            <div className="menu-management__note">
-              <strong>📝 Nota:</strong> Regola disponibilità e dettagli del piatto prima di salvarlo.
-            </div>
-
             <div className="menu-management__form-actions">
               <button type="submit" className="button-glass button-glass--primary menu-management__submit">
                 {editingItem ? 'Salva Modifiche' : 'Salva Piatto'}

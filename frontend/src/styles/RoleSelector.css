@@ -73,7 +73,7 @@
 .role-selector__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-rows: repeat(3, auto);
   gap: clamp(16px, 3vw, 24px);
   max-width: 600px;
   margin: 0 auto;
@@ -126,6 +126,16 @@
   border-color: rgba(175, 82, 222, 0.45);
 }
 
+.role-selector__card--red:hover {
+  background: linear-gradient(145deg, rgba(255, 59, 48, 0.25), rgba(255, 69, 58, 0.15));
+  border-color: rgba(255, 59, 48, 0.45);
+}
+
+/* Layout specifico per griglia 2x3 */
+.role-selector__card--full-width {
+  grid-column: span 2;
+}
+
 .role-selector__icon {
   font-size: clamp(3rem, 6vw, 4rem);
   line-height: 1;
@@ -162,7 +172,7 @@
 @media (max-width: 768px) {
   .role-selector__grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-rows: repeat(3, auto);
     max-width: 480px;
   }
 }
@@ -170,7 +180,11 @@
 @media (max-width: 500px) {
   .role-selector__grid {
     grid-template-columns: 1fr;
-    grid-template-rows: repeat(4, 1fr);
+    grid-template-rows: repeat(5, auto);
     max-width: 300px;
+  }
+  
+  .role-selector__card--full-width {
+    grid-column: span 1;
   }
 }
