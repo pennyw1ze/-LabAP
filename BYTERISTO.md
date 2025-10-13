@@ -198,19 +198,14 @@ ByteRisto follows a **microservices architecture** with the following components
 
 ### 5. Manager Stories
 
-#### Story 5.1: Switch Between User Roles
-**As a** manager  
-**I want to** access all system roles (customer, waiter, chef, cashier)  
-**So that** I can oversee all operational aspects
-
-#### Story 5.2: Monitor Order Flow
+#### Story 5.1: Monitor Order Flow
 **As a** manager  
 **I want to** view real-time order statistics and counts  
 **So that** I can track restaurant performance
 
-#### Story 5.3: Access Complete Order History
+#### Story 5.2: Access to Complete Order History and System Information
 **As a** manager  
-**I want to** view all historical orders regardless of status  
+**I want to** view all historical orders regardless of status and system data 
 **So that** I can analyze past performance and trends
 
 ---
@@ -226,5 +221,10 @@ ByteRisto follows a **microservices architecture** with the following components
 **As a** system user  
 **I want to** manually refresh order and menu data  
 **So that** I can get the latest information on demand
+
+#### Story 6.3: Switch Between User Roles
+**As a** system user  
+**I want to** access all system roles (customer, waiter, chef, cashier)  
+**So that** I can oversee all operational aspects
 
 ---
