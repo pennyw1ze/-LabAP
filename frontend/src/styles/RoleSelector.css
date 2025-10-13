@@ -72,8 +72,11 @@
 
 .role-selector__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
   gap: clamp(16px, 3vw, 24px);
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .role-selector__card {
@@ -159,11 +162,15 @@
 @media (max-width: 768px) {
   .role-selector__grid {
     grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    max-width: 480px;
   }
 }
 
 @media (max-width: 500px) {
   .role-selector__grid {
     grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, 1fr);
+    max-width: 300px;
   }
 }
