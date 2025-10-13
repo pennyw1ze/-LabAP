@@ -210,7 +210,7 @@ export const formatOrderStatus = (status) => {
     'confirmed': 'Confermato',
     'preparing': 'In Preparazione',
     'ready': 'Pronto',
-    'delivered': 'Consegnato',
+    'delivered': 'Pagato',
     'payed': 'Pagato',
     'cancelled': 'Annullato'
   };
