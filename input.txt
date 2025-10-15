@@ -1,0 +1,38 @@
+# SYSTEM DESCRIPTION:
+
+ByteRisto is a comprehensive internal restaurant management system designed to streamline operations across all aspects of restaurant service. Built with a modern microservices architecture, ByteRisto provides an all-in-one solution for menu management, order processing, and workflow coordination. The system includes menu management with complete control over menu items, pricing, availability, and nutritional information, order processing with full order lifecycle management from taking orders to payment processing, role-based access control for secure access management for different staff roles, real-time communication through message queue system for seamless inter-service communication, kitchen display with dedicated interface for kitchen staff to manage order preparation, and payment processing with integrated payment handling system.
+
+# USER STORIES:
+
+1) As a customer, I want to view all restaurant menu items with descriptions and prices so that I can see the complete selection available
+2) As a customer, I want to filter and view only appetizer menu items so that I can choose starters for my meal
+3) As a customer, I want to filter and view only main course items so that I can select my primary course
+4) As a customer, I want to filter and view only dessert menu items so that I can choose a sweet ending to my meal
+5) As a customer, I want to filter and view only beverage options so that I can select drinks to accompany my meal
+6) As a customer, I want to filter and view only side dish options so that I can complement my main course
+7) As a customer, I want to see detailed information about each menu item including allergens and nutritional info so that I can make informed dietary choices
+8) As a waiter, I want to create a new order for a specific table so that I can start recording customer requests
+9) As a waiter, I want to add menu items with quantities to an order so that I can build the complete customer order
+10) As a waiter, I want to add special cooking instructions for menu items so that the kitchen knows about customer preferences
+11) As a waiter, I want to filter orders by status (confirmed, preparing, ready) so that I can track orders at different stages
+12) As a waiter, I want to filter orders by table number so that I can focus on specific tables I'm serving
+13) As a waiter, I want to see elapsed time and estimated completion for orders so that I can manage customer expectations
+14) As a waiter, I want to add new items to the menu with complete details so that new dishes become available for ordering
+15) As a waiter, I want to modify existing menu items' information and pricing so that menu information stays current and accurate
+16) As a waiter, I want to mark menu items as available or unavailable so that customers cannot order unavailable items
+17) As a waiter, I want to delete a menu item when requested by a manager so that the menu remains always updated
+18) As a chef, I want to see all incoming orders in chronological order so that I can prioritize preparation efficiently
+19) As a chef, I want to mark confirmed orders as "preparing" so that staff knows I've started cooking
+20) As a chef, I want to change preparing orders to "ready" status so that waiters know food is ready for pickup
+21) As a chef, I want to see complete order details including special instructions so that I can prepare dishes according to customer requests
+22) As a chef, I want to filter orders by preparation status on kitchen display so that I can focus on orders at specific cooking stages
+23) As a cashier, I want to see only orders with "ready" status awaiting payment so that I can process completed orders efficiently
+24) As a cashier, I want to select cash as payment method and complete transactions so that I can handle cash payments from customers
+25) As a cashier, I want to select card as payment method for transactions so that I can handle credit/debit card payments
+26) As a cashier, I want to filter payment-ready orders by table number so that I can quickly find orders for specific customers
+27) As a cashier, I want to see detailed order breakdown with total amounts so that I can verify charges before processing payment
+28) As a manager, I want to view real-time order statistics and counts so that I can track restaurant performance
+29) As a manager, I want to view all historical orders regardless of status and system data so that I can analyze past performance and trends
+30) As a system user, I want to enable automatic refresh of order data so that I always see current information without manual updates
+31) As a system user, I want to manually refresh order and menu data so that I can get the latest information on demand
+32) As a system user, I want to access all system roles (customer, waiter, chef, cashier and manager) so that I can oversee all operational aspects
