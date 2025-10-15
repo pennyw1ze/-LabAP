@@ -1,0 +1,121 @@
+{
+  "data_metrics": {
+    "total_sets": 9,
+    "total_user_stories": 25,
+    "sets_with_database": 6
+  },
+  "story_sets": [
+    {
+      "set_id": 1,
+      "set_name": "Menu Management",
+      "user_stories": ["1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "2.7", "2.8", "2.9", "2.10"],
+      "links": [2, 3],
+      "db": true,
+      "description": "Management and display of restaurant menu items including creation, modification, categorization and viewing"
+    },
+    {
+      "set_id": 2,
+      "set_name": "Order Management",
+      "user_stories": ["2.1", "2.2", "2.3", "2.4", "2.5", "2.6"],
+      "links": [1, 3, 4],
+      "db": true,
+      "description": "Order creation, modification and tracking by waiters including table management and timing"
+    },
+    {
+      "set_id": 3,
+      "set_name": "Kitchen Operations",
+      "user_stories": ["3.1", "3.2", "3.3", "3.4", "3.5"],
+      "links": [2, 4],
+      "db": true,
+      "description": "Kitchen workflow management including order queue, preparation status and completion tracking"
+    },
+    {
+      "set_id": 4,
+      "set_name": "Payment Processing",
+      "user_stories": ["4.1", "4.2", "4.3", "4.4", "4.5"],
+      "links": [2, 3],
+      "db": true,
+      "description": "Payment transaction management for completed orders including cash and card processing"
+    },
+    {
+      "set_id": 5,
+      "set_name": "Management Reporting",
+      "user_stories": ["5.1", "5.2"],
+      "links": [2, 4],
+      "db": true,
+      "description": "Management dashboard and analytics for order flow monitoring and historical data access"
+    },
+    {
+      "set_id": 6,
+      "set_name": "System Management",
+      "user_stories": ["6.1", "6.2"],
+      "links": [7],
+      "db": false,
+      "description": "System-level functionality for data refresh and real-time updates"
+    },
+    {
+      "set_id": 7,
+      "set_name": "User Interface",
+      "user_stories": ["6.3"],
+      "links": [6],
+      "db": false,
+      "description": "User interface and role switching functionality for system navigation"
+    },
+    {
+      "set_id": 8,
+      "set_name": "Authentication",
+      "user_stories": [],
+      "links": [7],
+      "db": true,
+      "description": "User authentication and authorization system for role-based access control"
+    },
+    {
+      "set_id": 9,
+      "set_name": "API Gateway",
+      "user_stories": [],
+      "links": [1, 2, 3, 4, 5],
+      "db": false,
+      "description": "Central API management and routing for microservices communication"
+    }
+  ],
+  "architectural_mapping": {
+    "containers": [
+      {
+        "container_name": "menu-service",
+        "sets": [1],
+        "microservice_type": "business_logic_with_db",
+        "database_required": true
+      },
+      {
+        "container_name": "order-service",
+        "sets": [2, 3, 4],
+        "microservice_type": "business_logic_with_db",
+        "database_required": true
+      },
+      {
+        "container_name": "management-service",
+        "sets": [5],
+        "microservice_type": "analytics_with_db",
+        "database_required": true
+      },
+      {
+        "container_name": "frontend-service",
+        "sets": [6, 7],
+        "microservice_type": "user_interface",
+        "database_required": false
+      },
+      {
+        "container_name": "auth-service",
+        "sets": [8],
+        "microservice_type": "authentication_with_db",
+        "database_required": true
+      },
+      {
+        "container_name": "api-gateway",
+        "sets": [9],
+        "microservice_type": "gateway",
+        "database_required": false
+      }
+    ]
+  }
+}
