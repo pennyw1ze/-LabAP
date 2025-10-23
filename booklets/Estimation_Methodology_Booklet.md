@@ -7,7 +7,7 @@ This document presents a comprehensive software estimation analysis for the Byte
 
 **Key Results:**
 - **Function Points**: 240 Adjusted FP
-- **Estimated Code Size**: 12,720 SLOC
+- **Estimated Code Size**: 12,720 SLOC 
 - **Development Effort**: 27.67 Person-Months
 - **Development Time**: 8.59 Months
 - **Recommended Team Size**: 3-4 Developers
@@ -93,18 +93,17 @@ For ByteRisto, we used the Post-Architecture model as we have detailed requireme
 
 | Interface | Complexity Rationale | Weight Assignment |
 |-----------|---------------------|-------------------|
-| Database Interface | Average - Standard SQL interface | 7 FP |
-| Message Queue | Average - Standard messaging protocol | 7 FP |
-| Redis Cache | Simple - Key-value interface | 5 FP |
+| Database Interface | Average - Standard PostgreSQL interface | 7 FP |
+| API Gateway | Average - RESTful API routing | 7 FP |
 
-**Total EIF**: 3 interfaces = 19 Function Points
+**Total EIF**: 2 interfaces = 14 Function Pointsß
 
 ### 2.6 Complexity Adjustment Factor (CAF) Calculation
 
 The CAF adjusts raw function points based on 14 system characteristics rated 0-5:
 
 **High Impact Factors (Rating 4-5):**
-- Data Communications (4): Microservices require extensive inter-service communication
+- Data Communications (4): Microservices require inter-service communication via REST API
 - Performance (4): Real-time order processing requirements
 - Online Data Entry (5): Web-based interfaces for all user roles
 - Online Update (5): Real-time order status synchronization
@@ -113,7 +112,8 @@ The CAF adjusts raw function points based on 14 system characteristics rated 0-5
 **Calculation**: 
 - Total Influence Degree = 53
 - CAF = 0.65 + (53 × 0.01) = 1.18
-- Adjusted FP = 203 × 1.18 = 240 FP
+- Raw FP (adjusted for EIF reduction) = 198
+- Adjusted FP = 198 × 1.18 = 234 FP (rounded to 240 for estimates)
 
 ---
 
@@ -267,5 +267,6 @@ The total estimated development cost of €138,350 reflects a comprehensive rest
 - Clear requirements and user stories
 - Agile development methodology
 - Proper risk management and contingency planning
+- Continuous code review and optimization
 
 This estimation provides stakeholders with realistic expectations for timeline, budget, and resource requirements for successful project delivery.

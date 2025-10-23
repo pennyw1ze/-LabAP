@@ -16,9 +16,6 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # RabbitMQ
-    RABBITMQ_URL = os.environ.get('RABBITMQ_URL', 'amqp://admin:password@localhost:5672')
-    
     # Flask settings
     PORT = int(os.environ.get('PORT', 3001))
     DEBUG = os.environ.get('FLASK_ENV') == 'development'

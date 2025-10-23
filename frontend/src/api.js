@@ -26,18 +26,6 @@ export async function getMenu(filters = {}) {
   }
 }
 
-export async function getMenuItemById(id) {
-  try {
-    const res = await fetch(`${API_BASE}/menu/${id}`);
-    if (!res.ok) throw new Error('Failed to fetch menu item');
-    const data = await res.json();
-    return data.success ? data.data : null;
-  } catch (error) {
-    console.error('Error fetching menu item:', error);
-    return null;
-  }
-}
-
 export async function createMenuItem(menuData) {
   try {
     const res = await fetch(`${API_BASE}/menu/`, {
@@ -49,7 +37,6 @@ export async function createMenuItem(menuData) {
     const data = await res.json();
     
     if (!res.ok) {
-      // Estrai il messaggio di errore dalla risposta se disponibile
       const errorMessage = data.message || data.error || `HTTP ${res.status}: ${res.statusText}`;
       throw new Error(errorMessage);
     }
@@ -72,7 +59,6 @@ export async function updateMenuItem(menuId, updateData) {
     const data = await res.json();
     
     if (!res.ok) {
-      // Estrai il messaggio di errore dalla risposta se disponibile
       const errorMessage = data.message || data.error || `HTTP ${res.status}: ${res.statusText}`;
       throw new Error(errorMessage);
     }
@@ -96,28 +82,4 @@ export async function deleteMenuItem(menuId) {
     console.error('Error deleting menu item:', error);
     throw error;
   }
-}
-
-// --- Orders (placeholder for other microservices) ---
-export async function getOrders() {
-  // Placeholder - da implementare quando avrai il microservizio orders
-  return [];
-}
-
-export async function createOrder(orderData) {
-  // Placeholder - da implementare quando avrai il microservizio orders
-  console.log('Order would be created:', orderData);
-  return { id: 'temp-' + Date.now(), ...orderData, status: 'confirmed' };
-}
-
-// --- Payments (placeholder for other microservices) ---
-export async function getPayments() {
-  // Placeholder - da implementare quando avrai il microservizio payments
-  return [];
-}
-
-export async function makePayment(paymentData) {
-  // Placeholder - da implementare quando avrai il microservizio payments
-  console.log('Payment would be processed:', paymentData);
-  return { id: 'payment-' + Date.now(), ...paymentData, status: 'completed' };
 }

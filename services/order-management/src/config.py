@@ -19,9 +19,6 @@ class Config:
     MENU_SERVICE_URL = os.environ.get('MENU_SERVICE_URL', 'http://localhost:3001')
     PAYMENT_SERVICE_URL = os.environ.get('PAYMENT_SERVICE_URL', 'http://localhost:3003')
     
-    # RabbitMQ
-    RABBITMQ_URL = os.environ.get('RABBITMQ_URL', 'amqp://admin:password@localhost:5672')
-    
     # Flask settings
     PORT = int(os.environ.get('PORT', 3002))
     DEBUG = os.environ.get('FLASK_ENV') == 'development'
