@@ -1,8 +1,10 @@
 {
   "data_metrics": {
-    "total_sets": 9,
+    "total_sets": 7,
     "total_user_stories": 32,
-    "sets_with_database": 6
+    "sets_with_database": 5,
+    "active_containers": 6,
+    "database_instances": 2
   },
   "story_sets": [
     {
@@ -49,7 +51,7 @@
       "set_id": 6,
       "set_name": "System Management",
       "user_stories": ["30", "31"],
-      "links": [7],
+      "links": [1, 2, 7],
       "db": false,
       "description": "System-level functionality for data refresh and real-time updates"
     },
@@ -57,65 +59,47 @@
       "set_id": 7,
       "set_name": "User Interface",
       "user_stories": ["32"],
-      "links": [6],
+      "links": [1, 2, 3, 4, 5, 6],
       "db": false,
       "description": "User interface and role switching functionality for system navigation"
-    },
-    {
-      "set_id": 8,
-      "set_name": "Authentication",
-      "user_stories": [],
-      "links": [7],
-      "db": true,
-      "description": "User authentication and authorization system for role-based access control"
-    },
-    {
-      "set_id": 9,
-      "set_name": "API Gateway",
-      "user_stories": [],
-      "links": [1, 2, 3, 4, 5],
-      "db": false,
-      "description": "Central API management and routing for microservices communication"
     }
   ],
   "architectural_mapping": {
     "containers": [
       {
-        "container_name": "menu-service",
+        "container_name": "menu-inventory-service",
         "sets": [1],
         "microservice_type": "business_logic_with_db",
-        "database_required": true
+        "database_required": true,
+        "database": "postgres-menu (Port 5432)"
       },
       {
-        "container_name": "order-service",
+        "container_name": "order-management-service",
         "sets": [2, 3, 4],
         "microservice_type": "business_logic_with_db",
-        "database_required": true
+        "database_required": true,
+        "database": "postgres-orders (Port 5433)"
       },
       {
-        "container_name": "management-service",
-        "sets": [5],
-        "microservice_type": "analytics_with_db",
-        "database_required": true
-      },
-      {
-        "container_name": "frontend-service",
+        "container_name": "frontend",
         "sets": [6, 7],
         "microservice_type": "user_interface",
-        "database_required": false
-      },
-      {
-        "container_name": "auth-service",
-        "sets": [8],
-        "microservice_type": "authentication_with_db",
-        "database_required": true
+        "database_required": false,
+        "technology": "React + Nginx"
       },
       {
         "container_name": "api-gateway",
-        "sets": [9],
+        "sets": [],
         "microservice_type": "gateway",
-        "database_required": false
+        "database_required": false,
+        "technology": "Flask",
+        "description": "Routes requests to Menu and Order services"
       }
+    ],
+    "removed_components": [
+      "RabbitMQ - Message queue not used in simplified architecture",
+      "Redis - Caching layer not implemented",
+      "Authentication Service - Role-based UI only, no backend auth"
     ]
   }
 }
