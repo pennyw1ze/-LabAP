@@ -469,8 +469,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For support and questions:
 - Create an issue in the GitHub repository
-- Email: nicolas@byteristo.local
-
 ---
 
 **ByteRisto** - Streamlining restaurant operations through modern microservices architecture.
